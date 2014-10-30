@@ -1,0 +1,164 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="12.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="Answer.cpp" />
+    <ClCompile Include="HPCAction.cpp" />
+    <ClCompile Include="HPCBrain.cpp" />
+    <ClCompile Include="HPCChara.cpp" />
+    <ClCompile Include="HPCCharaCollection.cpp" />
+    <ClCompile Include="HPCCharaParam.cpp" />
+    <ClCompile Include="HPCCircle.cpp" />
+    <ClCompile Include="HPCCollision.cpp" />
+    <ClCompile Include="HPCEnemyAccessor.cpp" />
+    <ClCompile Include="HPCField.cpp" />
+    <ClCompile Include="HPCGame.cpp" />
+    <ClCompile Include="HPCIntVec2.cpp" />
+    <ClCompile Include="HPCLevelDesigner.cpp" />
+    <ClCompile Include="HPCLevelGrid.cpp" />
+    <ClCompile Include="HPCLotus.cpp" />
+    <ClCompile Include="HPCLotusCollection.cpp" />
+    <ClCompile Include="HPCMain.cpp" />
+    <ClCompile Include="HPCMath.cpp" />
+    <ClCompile Include="HPCParameter.cpp" />
+    <ClCompile Include="HPCRandom.cpp" />
+    <ClCompile Include="HPCRandomSeed.cpp" />
+    <ClCompile Include="HPCRandomSet.cpp" />
+    <ClCompile Include="HPCRecord.cpp" />
+    <ClCompile Include="HPCRecordStage.cpp" />
+    <ClCompile Include="HPCRectangle.cpp" />
+    <ClCompile Include="HPCSimulation.cpp" />
+    <ClCompile Include="HPCStage.cpp" />
+    <ClCompile Include="HPCStageAccessor.cpp" />
+    <ClCompile Include="HPCTimer.cpp" />
+    <ClCompile Include="HPCTurnResult.cpp" />
+    <ClCompile Include="HPCVec2.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="HPCAction.hpp" />
+    <ClInclude Include="HPCActionType.hpp" />
+    <ClInclude Include="HPCAnswer.hpp" />
+    <ClInclude Include="HPCAnswerInclude.hpp" />
+    <ClInclude Include="HPCArrayNum.hpp" />
+    <ClInclude Include="HPCAssert.hpp" />
+    <ClInclude Include="HPCBrain.hpp" />
+    <ClInclude Include="HPCChara.hpp" />
+    <ClInclude Include="HPCCharaCollection.hpp" />
+    <ClInclude Include="HPCCharaParam.hpp" />
+    <ClInclude Include="HPCCharaType.hpp" />
+    <ClInclude Include="HPCCircle.hpp" />
+    <ClInclude Include="HPCCollision.hpp" />
+    <ClInclude Include="HPCCommon.hpp" />
+    <ClInclude Include="HPCEnemyAccessor.hpp" />
+    <ClInclude Include="HPCField.hpp" />
+    <ClInclude Include="HPCGame.hpp" />
+    <ClInclude Include="HPCIntVec2.hpp" />
+    <ClInclude Include="HPCLevelDesigner.hpp" />
+    <ClInclude Include="HPCLevelGrid.hpp" />
+    <ClInclude Include="HPCLotus.hpp" />
+    <ClInclude Include="HPCLotusCollection.hpp" />
+    <ClInclude Include="HPCMath.hpp" />
+    <ClInclude Include="HPCParameter.hpp" />
+    <ClInclude Include="HPCPrint.hpp" />
+    <ClInclude Include="HPCRandom.hpp" />
+    <ClInclude Include="HPCRandomSeed.hpp" />
+    <ClInclude Include="HPCRandomSet.hpp" />
+    <ClInclude Include="HPCRecord.hpp" />
+    <ClInclude Include="HPCRecordStage.hpp" />
+    <ClInclude Include="HPCRectangle.hpp" />
+    <ClInclude Include="HPCSimulation.hpp" />
+    <ClInclude Include="HPCStage.hpp" />
+    <ClInclude Include="HPCStageAccessor.hpp" />
+    <ClInclude Include="HPCStageState.hpp" />
+    <ClInclude Include="HPCTimer.hpp" />
+    <ClInclude Include="HPCTurnResult.hpp" />
+    <ClInclude Include="HPCTypes.hpp" />
+    <ClInclude Include="HPCVec2.hpp" />
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{75B04033-4DA9-4758-B791-874041AD8899}</ProjectGuid>
+    <Keyword>Win32Proj</Keyword>
+    <RootNamespace>HPC2014</RootNamespace>
+    <ProjectName>HPC2014</ProjectName>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <CharacterSet>NotSet</CharacterSet>
+    <PlatformToolset>v120</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>NotSet</CharacterSet>
+    <PlatformToolset>v120</PlatformToolset>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <LinkIncremental>true</LinkIncremental>
+    <OutDir>$(ProjectDir)/bin/$(Configuration)/</OutDir>
+    <IntDir>$(ProjectDir)/obj/$(Configuration)/</IntDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <LinkIncremental>false</LinkIncremental>
+    <OutDir>$(ProjectDir)/bin/$(Configuration)/</OutDir>
+    <IntDir>$(ProjectDir)/obj/$(Configuration)/</IntDir>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <PreprocessorDefinitions>DEBUG;WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <DisableSpecificWarnings>4351;4819;4996</DisableSpecificWarnings>
+      <ForcedIncludeFiles>
+      </ForcedIncludeFiles>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <DisableSpecificWarnings>4351;4819</DisableSpecificWarnings>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+    </Link>
+  </ItemDefinitionGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

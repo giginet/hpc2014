@@ -1,0 +1,100 @@
+/*
+ * HAL Programming Contest 2014 Viewer
+ * Copyright (c) 2014 HAL Laboratory, Inc.
+ * このファイルの利用は、同梱のREADMEにある利用条件に従ってください
+ */
+@CHARSET "UTF-8";
+
+#stage-buttons {
+  line-height: 10%;
+}
+
+.stage-button {
+  border-width: 1px;
+  height: 8px;
+  margin: 0;
+  padding: 4px;
+  width: 8px;
+}
+
+.label-1st {
+  background-color: #0d0;
+  border-color: #0d0;
+}
+
+.label-1st[disabled=disabled] {
+  background-color: #4e4;
+  border-color: #4e4;
+}
+
+.label-1st.selected,
+.label-1st.selected[disabled=disabled] {
+  background-color: #8e8;
+  border-color: #8e8;
+}
+
+.label-2nd {
+  background-color: #cc0;
+  border-color: #cc0;
+}
+
+.label-2nd[disabled=disabled] {
+  background-color: #dd4;
+  border-color: #dd4;
+}
+
+.label-2nd.selected,
+.label-2nd.selected[disabled=disabled] {
+  background-color: #ee8;
+  border-color: #ee8;
+}
+
+.label-3rd {
+  background-color: #fa0;
+  border-color: #fa0;
+}
+
+.label-3rd[disabled=disabled] {
+  background-color: #fb4;
+  border-color: #fb4;
+}
+
+.label-3rd.selected,
+.label-3rd.selected[disabled=disabled] {
+  background-color: #fc8;
+  border-color: #fc8;
+}
+
+.label-4th {
+  background-color: #f00;
+  border-color: #f00;
+}
+
+.label-4th[disabled=disabled] {
+  background-color: #f44;
+  border-color: #f44;
+}
+
+.label-4th.selected,
+.label-4th.selected[disabled=disabled] {
+  background-color: #f88;
+  border-color: #f88;
+}
+
+#pond {
+  background-color: #ccf;
+  background-image: linear-gradient(rgba(0, 0, 255, 0.1) 50%, transparent 50%);
+  background-size: 40px 40px;
+}
+
+.progress {
+  margin-bottom: 0;
+}
+
+.progress-bar {
+  transition:width 0s ease 0s;
+}
+
+.blur {
+  -webkit-filter: blur(2px);
+}

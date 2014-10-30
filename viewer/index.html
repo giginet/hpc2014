@@ -1,0 +1,141 @@
+<!--
+HAL Programming Contest 2014 Viewer
+Copyright (c) 2014 HAL Laboratory, Inc.
+このファイルの利用は、同梱のREADMEにある利用条件に従ってください
+ -->
+<!doctype html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link href="css/bootstrap.min.css" rel="stylesheet">
+<link href="css/jquery-ui-1.10.4.min.css" rel="stylesheet">
+<link href="css/main.css" rel="stylesheet">
+<title>Progcon2014 viewer</title>
+<body ng-app="viewer" ng-controller="ViewerController" id="viewer-controller" class="container">
+  <div class="jumbotron" id="mist" style="width:100%;height:100%;background-color:rgba(255, 255, 255, 0.7);position:absolute;z-index:10" ng-show="isNowLoading">
+    <h1 style="text-align:center">Now Loading...</h1>
+  </div>
+  <div id="main" ng-class="{blur:isNowLoading}">
+    <nav class="navbar navbar-default">
+      <div class="container">
+        <div class="row">
+          <div class="col-lg-3 col-md-4 col-sm-5 col-xs-12">
+            <div class="form-group">
+              <label for="file">File input</label>
+              <input type="file" id="file" name="file" ng-disabled="isPlay">
+            </div>
+          </div>
+          <div class="col-lg-3 col-md-4 col-sm-5 col-xs-12">
+            <label class="control-label">
+              <span ng-bind-template="Stage (0～{{stages.length-1<0?0:stages.length-1}})"></span>
+              <span class="label label-1st">1st</span>
+              <span class="label label-2nd">2nd</span>
+              <span class="label label-3rd">3rd</span>
+              <span class="label label-4th">4th</span>
+            </label><br>
+            <div class="input-group input-group-sm">
+              <span class="input-group-btn">
+                <button class="btn btn-default" type="button" ng-click="currentStageNo=0" ng-disabled="isPlay||currentStageNo==0">
+                  <i class="glyphicon glyphicon-fast-backward"></i>
+                </button>
+                <button class="btn btn-default" type="button" ng-click="currentStageNo=currentStageNo-1" ng-disabled="isPlay||currentStageNo==0">
+                  <i class="glyphicon glyphicon-step-backward"></i>
+                </button>
+              </span>
+              <input type="text" class="form-control" ng-model="currentStageNo" ng-change="validateStage()" ng-disabled="isPlay">
+              <span class="input-group-btn">
+                <button class="btn btn-default" type="button" ng-click="currentStageNo=currentStageNo+1" ng-disabled="isPlay||currentStageNo==stages.length-1">
+                  <i class="glyphicon glyphicon-step-forward"></i>
+                </button>
+                <button class="btn btn-default" type="button" ng-click="currentStageNo=stages.length-1" ng-disabled="isPlay||currentStageNo==stages.length-1">
+                  <i class="glyphicon glyphicon-fast-forward"></i>
+                </button>
+              </span>
+            </div>
+            <div id="stage-buttons" class="control-label">
+              <button class="stage-button label-{{s.rank[0]|rank}}" ng-class="{selected:$index==currentStageNo}" ng-repeat="s in stages" ng-click="set($index)" ng-disabled="isPlay">　</button>
+            </div>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-lg-3 col-md-4 col-sm-5 col-xs-12">
+            <label class="control-label">Turn</label><br>
+            <div class="input-group input-group-sm">
+              <span class="input-group-btn">
+                <button class="btn btn-default control" type="button" ng-click="currentTurnNo=0" ng-disabled="isPlay||currentTurnNo==0">
+                  <i class="glyphicon glyphicon-fast-backward"></i>
+                </button>
+                <button class="btn btn-default control" type="button" ng-click="currentTurnNo=currentTurnNo-1" ng-disabled="isPlay||currentTurnNo==0">
+                  <i class="glyphicon glyphicon-step-backward"></i>
+                </button>
+              </span>
+              <input type="text" class="form-control control" ng-model="currentTurnNo" ng-change="validateTurn()" ng-disabled="isPlay">
+              <span class="input-group-addon" ng-bind-template="/ {{currentStage.turns.length-1<0?0:currentStage.turns.length-1}}"></span>
+              <span class="input-group-btn">
+                <button class="btn btn-primary" type="button" ng-click="play()" ng-disabled="currentTurnNo==currentStage.turns.length-1">
+                  <i class="glyphicon glyphicon-play" ng-hide="isPlay"></i>
+                  <i class="glyphicon glyphicon-pause" ng-show="isPlay"></i>
+                </button>
+                <button class="btn btn-default" type="button" ng-click="currentTurnNo=currentTurnNo+1" ng-disabled="isPlay||currentTurnNo==currentStage.turns.length-1">
+                  <i class="glyphicon glyphicon-step-forward"></i>
+                </button>
+                <button class="btn btn-default" type="button" ng-click="currentTurnNo=currentStage.turns.length-1" ng-disabled="isPlay||currentTurnNo==currentStage.turns.length-1">
+                  <i class="glyphicon glyphicon-fast-forward"></i>
+                </button>
+              </span>
+            </div>
+            <div id="slider"></div>
+          </div>
+          <div class="col-lg-2 col-md-3 col-sm-3 col-xs-8">
+            <label class="control-label">Play speed</label><br>
+            <div class="btn-group btn-group-sm" data-toggle="buttons">
+              <label class="btn btn-default" ng-click="wait=100">
+                <input type="radio">Slow
+              </label>
+              <label class="btn btn-default active" ng-click="wait=60">
+                <input type="radio">Middle
+              </label>
+              <label class="btn btn-default" ng-click="wait=10">
+                <input type="radio">Fast
+              </label>
+            </div>
+          </div>
+          <div class="col-lg-1 col-md-1 col-sm-1 col-xs-4">
+            <label class="control-label">Information</label><br>
+            <button type="button" class="btn btn-default btn-sm" data-toggle="button" ng-click="isShowInfo=!isShowInfo">Show</button>
+          </div>
+        </div>
+      </div>
+    </nav>
+    <div class="container">
+      <div class="row">
+        <div class="col-lg-3 col-md-3 col-sm-4 col-xs-5">
+          <table class="table">
+            <tr><th colspan="3"><span ng-bind-template="Score: {{currentStage.score||0|number}}"></span>
+            <tr ng-repeat="progress in progresses">
+              <td><span class="label label-{{currentStage.rank[$index]|rank}}" ng-bind="currentStage.rank[$index]|rank"></span>
+              <td class="col-lg-8 col-md-8 col-sm-8 col-xs-8">
+                <div class="progress">
+                  <div class="progress-bar progress-bar-striped active" ng-style="{'width':progress.result+'%','background-color':ninjaColor($index)}"></div>
+                </div>
+              <td><span ng-bind="progress.lotusCount"></span>
+          </table>
+        </div>
+        <div class="col-lg-7 col-md-7 col-sm-7 col-xs-7">
+          <canvas id="grid-img" width="100" height="100" style="display:none"></canvas>
+          <canvas class="screen" id="ninja-info" style="position:absolute;z-index:4"></canvas>
+          <canvas class="screen" id="ninja" style="position:absolute;z-index:3"></canvas>
+          <canvas class="screen" id="pond-info" style="position:absolute;z-index:2"></canvas>
+          <canvas class="screen" id="grid" style="position:absolute;z-index:1"></canvas>
+          <canvas class="screen" id="pond"></canvas>
+        </div>
+      </div>
+    </div>
+    <div class="container"><p class="copyright">©HAL Laboratory, Inc.</div>
+  </div>
+</body>
+<script src="js/jquery-2.1.1.min.js"></script>
+<script src="js/jquery-ui-1.10.4.min.js"></script>
+<script src="js/underscore-min.js"></script>
+<script src="js/bootstrap.min.js"></script>
+<script src="js/angular.min.js"></script>
+<script src="js/main.js"></script>

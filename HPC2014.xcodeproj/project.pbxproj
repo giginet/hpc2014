@@ -1,0 +1,436 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 42;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		24974FC00000067E00D4A35D /* HPCAction.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 24974F7B0000067E00D4A35D /* HPCAction.cpp */; };
+		24974FC10000067E00D4A35D /* HPCBrain.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 24974F820000067E00D4A35D /* HPCBrain.cpp */; };
+		24974FC20000067E00D4A35D /* HPCChara.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 24974F840000067E00D4A35D /* HPCChara.cpp */; };
+		24974FC30000067E00D4A35D /* HPCCharaCollection.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 24974F860000067E00D4A35D /* HPCCharaCollection.cpp */; };
+		24974FC40000067E00D4A35D /* HPCCharaParam.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 24974F880000067E00D4A35D /* HPCCharaParam.cpp */; };
+		24974FC50000067E00D4A35D /* HPCCircle.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 24974F8B0000067E00D4A35D /* HPCCircle.cpp */; };
+		24974FC60000067E00D4A35D /* HPCCollision.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 24974F8D0000067E00D4A35D /* HPCCollision.cpp */; };
+		24974FC70000067E00D4A35D /* HPCEnemyAccessor.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 24974F900000067E00D4A35D /* HPCEnemyAccessor.cpp */; };
+		24974FC80000067E00D4A35D /* HPCField.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 24974F920000067E00D4A35D /* HPCField.cpp */; };
+		24974FC90000067E00D4A35D /* HPCGame.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 24974F940000067E00D4A35D /* HPCGame.cpp */; };
+		24974FCA0000067E00D4A35D /* HPCIntVec2.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 24974F960000067E00D4A35D /* HPCIntVec2.cpp */; };
+		24974FCB0000067E00D4A35D /* HPCLevelDesigner.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 24974F980000067E00D4A35D /* HPCLevelDesigner.cpp */; };
+		24974FCC0000067E00D4A35D /* HPCLevelGrid.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 24974F9A0000067E00D4A35D /* HPCLevelGrid.cpp */; };
+		24974FCD0000067E00D4A35D /* HPCLotus.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 24974F9C0000067E00D4A35D /* HPCLotus.cpp */; };
+		24974FCE0000067E00D4A35D /* HPCLotusCollection.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 24974F9E0000067E00D4A35D /* HPCLotusCollection.cpp */; };
+		24974FCF0000067E00D4A35D /* HPCMain.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 24974FA00000067E00D4A35D /* HPCMain.cpp */; };
+		24974FD00000067E00D4A35D /* HPCMath.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 24974FA10000067E00D4A35D /* HPCMath.cpp */; };
+		24974FD10000067E00D4A35D /* HPCParameter.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 24974FA30000067E00D4A35D /* HPCParameter.cpp */; };
+		24974FD20000067E00D4A35D /* HPCRandom.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 24974FA60000067E00D4A35D /* HPCRandom.cpp */; };
+		24974FD30000067E00D4A35D /* HPCRandomSeed.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 24974FA80000067E00D4A35D /* HPCRandomSeed.cpp */; };
+		24974FD40000067E00D4A35D /* HPCRandomSet.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 24974FAA0000067E00D4A35D /* HPCRandomSet.cpp */; };
+		24974FD50000067E00D4A35D /* HPCRecord.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 24974FAC0000067E00D4A35D /* HPCRecord.cpp */; };
+		24974FD60000067E00D4A35D /* HPCRecordStage.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 24974FAE0000067E00D4A35D /* HPCRecordStage.cpp */; };
+		24974FD70000067E00D4A35D /* HPCRectangle.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 24974FB00000067E00D4A35D /* HPCRectangle.cpp */; };
+		24974FD80000067E00D4A35D /* HPCSimulation.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 24974FB20000067E00D4A35D /* HPCSimulation.cpp */; };
+		24974FD90000067E00D4A35D /* HPCStage.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 24974FB40000067E00D4A35D /* HPCStage.cpp */; };
+		24974FDA0000067E00D4A35D /* HPCStageAccessor.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 24974FB60000067E00D4A35D /* HPCStageAccessor.cpp */; };
+		24974FDB0000067E00D4A35D /* HPCTimer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 24974FB90000067E00D4A35D /* HPCTimer.cpp */; };
+		24974FDC0000067E00D4A35D /* HPCTurnResult.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 24974FBB0000067E00D4A35D /* HPCTurnResult.cpp */; };
+		24974FDD0000067E00D4A35D /* HPCVec2.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 24974FBE0000067E00D4A35D /* HPCVec2.cpp */; };
+		24974FDF0000068600D4A35D /* Answer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 24974FDE0000068600D4A35D /* Answer.cpp */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		8DD76F690486A84900D96B5E /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 8;
+			dstPath = /usr/share/man/man1/;
+			dstSubfolderSpec = 0;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 1;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		24974F7B0000067E00D4A35D /* HPCAction.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = HPCAction.cpp; sourceTree = "<group>"; };
+		24974F7C0000067E00D4A35D /* HPCAction.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = HPCAction.hpp; sourceTree = "<group>"; };
+		24974F7D0000067E00D4A35D /* HPCActionType.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = HPCActionType.hpp; sourceTree = "<group>"; };
+		24974F7E0000067E00D4A35D /* HPCAnswer.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = HPCAnswer.hpp; sourceTree = "<group>"; };
+		24974F7F0000067E00D4A35D /* HPCAnswerInclude.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = HPCAnswerInclude.hpp; sourceTree = "<group>"; };
+		24974F800000067E00D4A35D /* HPCArrayNum.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = HPCArrayNum.hpp; sourceTree = "<group>"; };
+		24974F810000067E00D4A35D /* HPCAssert.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = HPCAssert.hpp; sourceTree = "<group>"; };
+		24974F820000067E00D4A35D /* HPCBrain.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = HPCBrain.cpp; sourceTree = "<group>"; };
+		24974F830000067E00D4A35D /* HPCBrain.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = HPCBrain.hpp; sourceTree = "<group>"; };
+		24974F840000067E00D4A35D /* HPCChara.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = HPCChara.cpp; sourceTree = "<group>"; };
+		24974F850000067E00D4A35D /* HPCChara.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = HPCChara.hpp; sourceTree = "<group>"; };
+		24974F860000067E00D4A35D /* HPCCharaCollection.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = HPCCharaCollection.cpp; sourceTree = "<group>"; };
+		24974F870000067E00D4A35D /* HPCCharaCollection.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = HPCCharaCollection.hpp; sourceTree = "<group>"; };
+		24974F880000067E00D4A35D /* HPCCharaParam.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = HPCCharaParam.cpp; sourceTree = "<group>"; };
+		24974F890000067E00D4A35D /* HPCCharaParam.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = HPCCharaParam.hpp; sourceTree = "<group>"; };
+		24974F8A0000067E00D4A35D /* HPCCharaType.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = HPCCharaType.hpp; sourceTree = "<group>"; };
+		24974F8B0000067E00D4A35D /* HPCCircle.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = HPCCircle.cpp; sourceTree = "<group>"; };
+		24974F8C0000067E00D4A35D /* HPCCircle.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = HPCCircle.hpp; sourceTree = "<group>"; };
+		24974F8D0000067E00D4A35D /* HPCCollision.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = HPCCollision.cpp; sourceTree = "<group>"; };
+		24974F8E0000067E00D4A35D /* HPCCollision.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = HPCCollision.hpp; sourceTree = "<group>"; };
+		24974F8F0000067E00D4A35D /* HPCCommon.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = HPCCommon.hpp; sourceTree = "<group>"; };
+		24974F900000067E00D4A35D /* HPCEnemyAccessor.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = HPCEnemyAccessor.cpp; sourceTree = "<group>"; };
+		24974F910000067E00D4A35D /* HPCEnemyAccessor.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = HPCEnemyAccessor.hpp; sourceTree = "<group>"; };
+		24974F920000067E00D4A35D /* HPCField.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = HPCField.cpp; sourceTree = "<group>"; };
+		24974F930000067E00D4A35D /* HPCField.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = HPCField.hpp; sourceTree = "<group>"; };
+		24974F940000067E00D4A35D /* HPCGame.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = HPCGame.cpp; sourceTree = "<group>"; };
+		24974F950000067E00D4A35D /* HPCGame.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = HPCGame.hpp; sourceTree = "<group>"; };
+		24974F960000067E00D4A35D /* HPCIntVec2.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = HPCIntVec2.cpp; sourceTree = "<group>"; };
+		24974F970000067E00D4A35D /* HPCIntVec2.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = HPCIntVec2.hpp; sourceTree = "<group>"; };
+		24974F980000067E00D4A35D /* HPCLevelDesigner.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = HPCLevelDesigner.cpp; sourceTree = "<group>"; };
+		24974F990000067E00D4A35D /* HPCLevelDesigner.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = HPCLevelDesigner.hpp; sourceTree = "<group>"; };
+		24974F9A0000067E00D4A35D /* HPCLevelGrid.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = HPCLevelGrid.cpp; sourceTree = "<group>"; };
+		24974F9B0000067E00D4A35D /* HPCLevelGrid.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = HPCLevelGrid.hpp; sourceTree = "<group>"; };
+		24974F9C0000067E00D4A35D /* HPCLotus.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = HPCLotus.cpp; sourceTree = "<group>"; };
+		24974F9D0000067E00D4A35D /* HPCLotus.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = HPCLotus.hpp; sourceTree = "<group>"; };
+		24974F9E0000067E00D4A35D /* HPCLotusCollection.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = HPCLotusCollection.cpp; sourceTree = "<group>"; };
+		24974F9F0000067E00D4A35D /* HPCLotusCollection.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = HPCLotusCollection.hpp; sourceTree = "<group>"; };
+		24974FA00000067E00D4A35D /* HPCMain.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = HPCMain.cpp; sourceTree = "<group>"; };
+		24974FA10000067E00D4A35D /* HPCMath.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = HPCMath.cpp; sourceTree = "<group>"; };
+		24974FA20000067E00D4A35D /* HPCMath.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = HPCMath.hpp; sourceTree = "<group>"; };
+		24974FA30000067E00D4A35D /* HPCParameter.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = HPCParameter.cpp; sourceTree = "<group>"; };
+		24974FA40000067E00D4A35D /* HPCParameter.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = HPCParameter.hpp; sourceTree = "<group>"; };
+		24974FA50000067E00D4A35D /* HPCPrint.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = HPCPrint.hpp; sourceTree = "<group>"; };
+		24974FA60000067E00D4A35D /* HPCRandom.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = HPCRandom.cpp; sourceTree = "<group>"; };
+		24974FA70000067E00D4A35D /* HPCRandom.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = HPCRandom.hpp; sourceTree = "<group>"; };
+		24974FA80000067E00D4A35D /* HPCRandomSeed.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = HPCRandomSeed.cpp; sourceTree = "<group>"; };
+		24974FA90000067E00D4A35D /* HPCRandomSeed.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = HPCRandomSeed.hpp; sourceTree = "<group>"; };
+		24974FAA0000067E00D4A35D /* HPCRandomSet.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = HPCRandomSet.cpp; sourceTree = "<group>"; };
+		24974FAB0000067E00D4A35D /* HPCRandomSet.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = HPCRandomSet.hpp; sourceTree = "<group>"; };
+		24974FAC0000067E00D4A35D /* HPCRecord.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = HPCRecord.cpp; sourceTree = "<group>"; };
+		24974FAD0000067E00D4A35D /* HPCRecord.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = HPCRecord.hpp; sourceTree = "<group>"; };
+		24974FAE0000067E00D4A35D /* HPCRecordStage.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = HPCRecordStage.cpp; sourceTree = "<group>"; };
+		24974FAF0000067E00D4A35D /* HPCRecordStage.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = HPCRecordStage.hpp; sourceTree = "<group>"; };
+		24974FB00000067E00D4A35D /* HPCRectangle.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = HPCRectangle.cpp; sourceTree = "<group>"; };
+		24974FB10000067E00D4A35D /* HPCRectangle.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = HPCRectangle.hpp; sourceTree = "<group>"; };
+		24974FB20000067E00D4A35D /* HPCSimulation.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = HPCSimulation.cpp; sourceTree = "<group>"; };
+		24974FB30000067E00D4A35D /* HPCSimulation.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = HPCSimulation.hpp; sourceTree = "<group>"; };
+		24974FB40000067E00D4A35D /* HPCStage.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = HPCStage.cpp; sourceTree = "<group>"; };
+		24974FB50000067E00D4A35D /* HPCStage.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = HPCStage.hpp; sourceTree = "<group>"; };
+		24974FB60000067E00D4A35D /* HPCStageAccessor.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = HPCStageAccessor.cpp; sourceTree = "<group>"; };
+		24974FB70000067E00D4A35D /* HPCStageAccessor.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = HPCStageAccessor.hpp; sourceTree = "<group>"; };
+		24974FB80000067E00D4A35D /* HPCStageState.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = HPCStageState.hpp; sourceTree = "<group>"; };
+		24974FB90000067E00D4A35D /* HPCTimer.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = HPCTimer.cpp; sourceTree = "<group>"; };
+		24974FBA0000067E00D4A35D /* HPCTimer.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = HPCTimer.hpp; sourceTree = "<group>"; };
+		24974FBB0000067E00D4A35D /* HPCTurnResult.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = HPCTurnResult.cpp; sourceTree = "<group>"; };
+		24974FBC0000067E00D4A35D /* HPCTurnResult.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = HPCTurnResult.hpp; sourceTree = "<group>"; };
+		24974FBD0000067E00D4A35D /* HPCTypes.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = HPCTypes.hpp; sourceTree = "<group>"; };
+		24974FBE0000067E00D4A35D /* HPCVec2.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = HPCVec2.cpp; sourceTree = "<group>"; };
+		24974FBF0000067E00D4A35D /* HPCVec2.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = HPCVec2.hpp; sourceTree = "<group>"; };
+		24974FDE0000068600D4A35D /* Answer.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Answer.cpp; sourceTree = "<group>"; };
+		E956AF32148719DB0008FCB5 /* HPC2014 */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = HPC2014; sourceTree = BUILT_PRODUCTS_DIR; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		8DD76F660486A84900D96B5E /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		08FB7794FE84155DC02AAC07 /* HPC2014 */ = {
+			isa = PBXGroup;
+			children = (
+				08FB7795FE84155DC02AAC07 /* Source */,
+				C6859E8C029090F304C91782 /* Documentation */,
+				1AB674ADFE9D54B511CA2CBB /* Products */,
+			);
+			name = HPC2014;
+			sourceTree = "<group>";
+		};
+		08FB7795FE84155DC02AAC07 /* Source */ = {
+			isa = PBXGroup;
+			children = (
+				24974FDE0000068600D4A35D /* Answer.cpp */,
+				24974F7B0000067E00D4A35D /* HPCAction.cpp */,
+				24974F7C0000067E00D4A35D /* HPCAction.hpp */,
+				24974F7D0000067E00D4A35D /* HPCActionType.hpp */,
+				24974F7E0000067E00D4A35D /* HPCAnswer.hpp */,
+				24974F7F0000067E00D4A35D /* HPCAnswerInclude.hpp */,
+				24974F800000067E00D4A35D /* HPCArrayNum.hpp */,
+				24974F810000067E00D4A35D /* HPCAssert.hpp */,
+				24974F820000067E00D4A35D /* HPCBrain.cpp */,
+				24974F830000067E00D4A35D /* HPCBrain.hpp */,
+				24974F840000067E00D4A35D /* HPCChara.cpp */,
+				24974F850000067E00D4A35D /* HPCChara.hpp */,
+				24974F860000067E00D4A35D /* HPCCharaCollection.cpp */,
+				24974F870000067E00D4A35D /* HPCCharaCollection.hpp */,
+				24974F880000067E00D4A35D /* HPCCharaParam.cpp */,
+				24974F890000067E00D4A35D /* HPCCharaParam.hpp */,
+				24974F8A0000067E00D4A35D /* HPCCharaType.hpp */,
+				24974F8B0000067E00D4A35D /* HPCCircle.cpp */,
+				24974F8C0000067E00D4A35D /* HPCCircle.hpp */,
+				24974F8D0000067E00D4A35D /* HPCCollision.cpp */,
+				24974F8E0000067E00D4A35D /* HPCCollision.hpp */,
+				24974F8F0000067E00D4A35D /* HPCCommon.hpp */,
+				24974F900000067E00D4A35D /* HPCEnemyAccessor.cpp */,
+				24974F910000067E00D4A35D /* HPCEnemyAccessor.hpp */,
+				24974F920000067E00D4A35D /* HPCField.cpp */,
+				24974F930000067E00D4A35D /* HPCField.hpp */,
+				24974F940000067E00D4A35D /* HPCGame.cpp */,
+				24974F950000067E00D4A35D /* HPCGame.hpp */,
+				24974F960000067E00D4A35D /* HPCIntVec2.cpp */,
+				24974F970000067E00D4A35D /* HPCIntVec2.hpp */,
+				24974F980000067E00D4A35D /* HPCLevelDesigner.cpp */,
+				24974F990000067E00D4A35D /* HPCLevelDesigner.hpp */,
+				24974F9A0000067E00D4A35D /* HPCLevelGrid.cpp */,
+				24974F9B0000067E00D4A35D /* HPCLevelGrid.hpp */,
+				24974F9C0000067E00D4A35D /* HPCLotus.cpp */,
+				24974F9D0000067E00D4A35D /* HPCLotus.hpp */,
+				24974F9E0000067E00D4A35D /* HPCLotusCollection.cpp */,
+				24974F9F0000067E00D4A35D /* HPCLotusCollection.hpp */,
+				24974FA00000067E00D4A35D /* HPCMain.cpp */,
+				24974FA10000067E00D4A35D /* HPCMath.cpp */,
+				24974FA20000067E00D4A35D /* HPCMath.hpp */,
+				24974FA30000067E00D4A35D /* HPCParameter.cpp */,
+				24974FA40000067E00D4A35D /* HPCParameter.hpp */,
+				24974FA50000067E00D4A35D /* HPCPrint.hpp */,
+				24974FA60000067E00D4A35D /* HPCRandom.cpp */,
+				24974FA70000067E00D4A35D /* HPCRandom.hpp */,
+				24974FA80000067E00D4A35D /* HPCRandomSeed.cpp */,
+				24974FA90000067E00D4A35D /* HPCRandomSeed.hpp */,
+				24974FAA0000067E00D4A35D /* HPCRandomSet.cpp */,
+				24974FAB0000067E00D4A35D /* HPCRandomSet.hpp */,
+				24974FAC0000067E00D4A35D /* HPCRecord.cpp */,
+				24974FAD0000067E00D4A35D /* HPCRecord.hpp */,
+				24974FAE0000067E00D4A35D /* HPCRecordStage.cpp */,
+				24974FAF0000067E00D4A35D /* HPCRecordStage.hpp */,
+				24974FB00000067E00D4A35D /* HPCRectangle.cpp */,
+				24974FB10000067E00D4A35D /* HPCRectangle.hpp */,
+				24974FB20000067E00D4A35D /* HPCSimulation.cpp */,
+				24974FB30000067E00D4A35D /* HPCSimulation.hpp */,
+				24974FB40000067E00D4A35D /* HPCStage.cpp */,
+				24974FB50000067E00D4A35D /* HPCStage.hpp */,
+				24974FB60000067E00D4A35D /* HPCStageAccessor.cpp */,
+				24974FB70000067E00D4A35D /* HPCStageAccessor.hpp */,
+				24974FB80000067E00D4A35D /* HPCStageState.hpp */,
+				24974FB90000067E00D4A35D /* HPCTimer.cpp */,
+				24974FBA0000067E00D4A35D /* HPCTimer.hpp */,
+				24974FBB0000067E00D4A35D /* HPCTurnResult.cpp */,
+				24974FBC0000067E00D4A35D /* HPCTurnResult.hpp */,
+				24974FBD0000067E00D4A35D /* HPCTypes.hpp */,
+				24974FBE0000067E00D4A35D /* HPCVec2.cpp */,
+				24974FBF0000067E00D4A35D /* HPCVec2.hpp */,
+			);
+			name = Source;
+			sourceTree = "<group>";
+		};
+		1AB674ADFE9D54B511CA2CBB /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				E956AF32148719DB0008FCB5 /* HPC2014 */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		C6859E8C029090F304C91782 /* Documentation */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Documentation;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		8DD76F620486A84900D96B5E /* HPC2014 */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 1DEB923108733DC60010E9CD /* Build configuration list for PBXNativeTarget "HPC2014" */;
+			buildPhases = (
+				8DD76F640486A84900D96B5E /* Sources */,
+				8DD76F660486A84900D96B5E /* Frameworks */,
+				8DD76F690486A84900D96B5E /* CopyFiles */,
+				0752744E1A02BD4100F31BAF /* ShellScript */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = HPC2014;
+			productInstallPath = "$(HOME)/bin";
+			productName = HPC2014;
+			productReference = E956AF32148719DB0008FCB5 /* HPC2014 */;
+			productType = "com.apple.product-type.tool";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		08FB7793FE84155DC02AAC07 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+			};
+			buildConfigurationList = 1DEB923508733DC60010E9CD /* Build configuration list for PBXProject "HPC2014" */;
+			compatibilityVersion = "Xcode 2.4";
+			developmentRegion = English;
+			hasScannedForEncodings = 1;
+			knownRegions = (
+				English,
+				Japanese,
+				French,
+				German,
+			);
+			mainGroup = 08FB7794FE84155DC02AAC07 /* HPC2014 */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				8DD76F620486A84900D96B5E /* HPC2014 */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		0752744E1A02BD4100F31BAF /* ShellScript */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/zsh;
+			shellScript = "cd ${BUILT_PRODUCTS_DIR}\n./HPC2014 -j > output.json\n./HPC2014 -n";
+			showEnvVarsInLog = 0;
+		};
+/* End PBXShellScriptBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		8DD76F640486A84900D96B5E /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				24974FC00000067E00D4A35D /* HPCAction.cpp in Sources */,
+				24974FC10000067E00D4A35D /* HPCBrain.cpp in Sources */,
+				24974FC20000067E00D4A35D /* HPCChara.cpp in Sources */,
+				24974FC30000067E00D4A35D /* HPCCharaCollection.cpp in Sources */,
+				24974FC40000067E00D4A35D /* HPCCharaParam.cpp in Sources */,
+				24974FC50000067E00D4A35D /* HPCCircle.cpp in Sources */,
+				24974FC60000067E00D4A35D /* HPCCollision.cpp in Sources */,
+				24974FC70000067E00D4A35D /* HPCEnemyAccessor.cpp in Sources */,
+				24974FC80000067E00D4A35D /* HPCField.cpp in Sources */,
+				24974FC90000067E00D4A35D /* HPCGame.cpp in Sources */,
+				24974FCA0000067E00D4A35D /* HPCIntVec2.cpp in Sources */,
+				24974FCB0000067E00D4A35D /* HPCLevelDesigner.cpp in Sources */,
+				24974FCC0000067E00D4A35D /* HPCLevelGrid.cpp in Sources */,
+				24974FCD0000067E00D4A35D /* HPCLotus.cpp in Sources */,
+				24974FCE0000067E00D4A35D /* HPCLotusCollection.cpp in Sources */,
+				24974FCF0000067E00D4A35D /* HPCMain.cpp in Sources */,
+				24974FD00000067E00D4A35D /* HPCMath.cpp in Sources */,
+				24974FD10000067E00D4A35D /* HPCParameter.cpp in Sources */,
+				24974FD20000067E00D4A35D /* HPCRandom.cpp in Sources */,
+				24974FD30000067E00D4A35D /* HPCRandomSeed.cpp in Sources */,
+				24974FD40000067E00D4A35D /* HPCRandomSet.cpp in Sources */,
+				24974FD50000067E00D4A35D /* HPCRecord.cpp in Sources */,
+				24974FD60000067E00D4A35D /* HPCRecordStage.cpp in Sources */,
+				24974FD70000067E00D4A35D /* HPCRectangle.cpp in Sources */,
+				24974FD80000067E00D4A35D /* HPCSimulation.cpp in Sources */,
+				24974FD90000067E00D4A35D /* HPCStage.cpp in Sources */,
+				24974FDA0000067E00D4A35D /* HPCStageAccessor.cpp in Sources */,
+				24974FDB0000067E00D4A35D /* HPCTimer.cpp in Sources */,
+				24974FDC0000067E00D4A35D /* HPCTurnResult.cpp in Sources */,
+				24974FDD0000067E00D4A35D /* HPCVec2.cpp in Sources */,
+				24974FDF0000068600D4A35D /* Answer.cpp in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		1DEB923208733DC60010E9CD /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				COPY_PHASE_STRIP = NO;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_ENABLE_FIX_AND_CONTINUE = YES;
+				GCC_MODEL_TUNING = G5;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = DEBUG;
+				GCC_PREPROCESSOR_DEFINITIONS_NOT_USED_IN_PRECOMPS = "";
+				INSTALL_PATH = /usr/local/bin;
+				PRODUCT_NAME = HPC2014;
+			};
+			name = Debug;
+		};
+		1DEB923308733DC60010E9CD /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				GCC_MODEL_TUNING = G5;
+				GCC_PREPROCESSOR_DEFINITIONS = DEBUG;
+				GCC_PREPROCESSOR_DEFINITIONS_NOT_USED_IN_PRECOMPS = "";
+				INSTALL_PATH = /usr/local/bin;
+				PRODUCT_NAME = HPC2014;
+			};
+			name = Release;
+		};
+		1DEB923608733DC60010E9CD /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ARCHS = "$(ARCHS_STANDARD_32_64_BIT)";
+				GCC_C_LANGUAGE_STANDARD = "compiler-default";
+				GCC_DEBUGGING_SYMBOLS = default;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = "";
+				GCC_PREPROCESSOR_DEFINITIONS_NOT_USED_IN_PRECOMPS = "";
+				GCC_VERSION = "";
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_INHIBIT_ALL_WARNINGS = NO;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PREBINDING = NO;
+			};
+			name = Debug;
+		};
+		1DEB923708733DC60010E9CD /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ARCHS = "$(ARCHS_STANDARD_32_64_BIT)";
+				GCC_C_LANGUAGE_STANDARD = "compiler-default";
+				GCC_PREPROCESSOR_DEFINITIONS = "";
+				GCC_PREPROCESSOR_DEFINITIONS_NOT_USED_IN_PRECOMPS = "";
+				GCC_VERSION = "";
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_INHIBIT_ALL_WARNINGS = NO;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PREBINDING = NO;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		1DEB923108733DC60010E9CD /* Build configuration list for PBXNativeTarget "HPC2014" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				1DEB923208733DC60010E9CD /* Debug */,
+				1DEB923308733DC60010E9CD /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		1DEB923508733DC60010E9CD /* Build configuration list for PBXProject "HPC2014" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				1DEB923608733DC60010E9CD /* Debug */,
+				1DEB923708733DC60010E9CD /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 08FB7793FE84155DC02AAC07 /* Project object */;
+}
