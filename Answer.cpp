@@ -18,6 +18,8 @@ namespace {
     
     /// タイマー
     int sTimer = 0;
+    int accellPerTurn = 0;
+    float wholeDistance = 0;
 }
 
 /// プロコン問題環境を表します。
@@ -32,6 +34,30 @@ namespace hpc {
     void Answer::Init(const StageAccessor& aStageAccessor)
     {
         sTimer = 0;
+        
+        auto lotuses = aStageAccessor.lotuses();
+        
+        auto player = aStageAccessor.player();
+        int maxCount = player.accelCount();
+        int waitTurn = player.accelWaitTurn();
+        int accellPerTurn = waitTurn / maxCount;
+        accellPerTurn += 1; // 切り上げ
+        
+        int lotusesCount = lotuses.count();
+        float lastLength = 0;
+        Lotus& prev = lotuses[0];
+        for (int i = 0; i < lotusesCount; ++i) {
+            Lotus& lotus = lotuses[(i + 1) % lotusesCount];
+            float distance = (lotus.pos() - prev.pos()).length();
+            prev = lotus;
+            wholeDistance += distance;
+            if (i == lotusesCount - 1) {
+                lastLength = distance;
+            }
+        }
+        // 総距離の算出
+        wholeDistance = wholeDistance * 3 - lastLength;
+        
     }
 
     //------------------------------------------------------------------------------
@@ -48,15 +74,23 @@ namespace hpc {
         
         Vec2 stream = field.flowVel();
         Vec2 current = player.pos();
+        const auto ds2 = Parameter::CharaDecelSpeed() * Parameter::CharaDecelSpeed();
+        const auto v0 = Parameter::CharaAccelSpeed();
+        const auto d = -Parameter::CharaDecelSpeed();
+        auto t = -(v0 / d);
+        //auto distance =
+        // 進む距離
+
         
         ++sTimer;
         int ac = player.accelCount();
-        
-        if (ac > 0 ) {
-            //sTimer = 0;
+        float speed = player.vel().squareLength();
+        // if (ac > 0) {
+        if (sTimer >= accellPerTurn) {
+            sTimer = 0;
             Vec2 target = lotuses[player.targetLotusNo()].pos();
             auto sub = target - current;
-            //target += stream * 13;
+            target -= stream * t;
             return Action::Accel(target);
         }
         return Action::Wait();
