@@ -125,7 +125,7 @@ namespace hpc {
         , Random& aRandom
         )
     {
-        return Action::Wait();
+        //return Action::Wait();
         const Chara& player = aStageAccessor.player();
         
         // 乱数を使うものは最初に計算
