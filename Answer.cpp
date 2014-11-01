@@ -31,6 +31,53 @@ namespace {
 /// プロコン問題環境を表します。
 namespace hpc {
 
+    // 今のアクセルで到達可能な地点
+    Vec2 canReachCurrentAccelPos(const Chara& player) {
+        auto v0 = player.vel().length();
+        auto a = Parameter::CharaDecelSpeed();
+        auto length = (-(v0* v0) / (2 * a));
+        auto normalized = player.vel();
+        normalized.normalize();
+        Vec2 currentPos = player.pos();
+        return currentPos + normalized * length;
+    }
+    
+    // targetに現在のアクセルだけで到達可能かどうか
+    bool isReachInCurrentAccel(const Chara& player, Vec2 target)
+    {
+        if ( (player.pos() - target).squareLength() < Parameter::CharaRadius() * 2 ) {
+            return true;
+        }
+        Vec2 goal = canReachCurrentAccelPos(player);
+        return (goal - target).squareLength() <= Parameter::CharaRadius() * 2;
+    }
+    
+    float calcWholeDistance(const StageAccessor& aStageAccessor)
+    {
+        float distance = 0;
+        auto lotuses = aStageAccessor.lotuses();
+        const Chara& player = aStageAccessor.player();
+        
+        Vec2 initialPosition = player.pos();
+        float initialDistance = (lotuses[0].pos() - initialPosition).length();
+ 
+        int lotusesCount = lotuses.count();
+        float lastDistance = 0;
+        Lotus& prev = lotuses[0];
+        for (int i = 0; i < lotusesCount; ++i) {
+            Lotus& lotus = lotuses[(i + 1) % lotusesCount];
+            float d = (lotus.pos() - prev.pos()).length();
+            prev = lotus;
+            distance += d;
+            if (i == lotusesCount - 1) {
+                lastDistance = d;
+            }
+        }
+        // 総距離の算出
+        distance = distance * 3 - lastDistance + initialDistance;
+        return distance;
+    }
+
     //------------------------------------------------------------------------------
     /// 各ステージ開始時に呼び出されます。
     ///
@@ -43,33 +90,15 @@ namespace hpc {
         accelPerTurn = 0;
         wholeDistance = 0;
         
-        auto lotuses = aStageAccessor.lotuses();
-        const Chara& player = aStageAccessor.player();
-        
-        Vec2 initialPosition = player.pos();
-        float initialDistance = (lotuses[0].pos() - initialPosition).length();
-        
-        int maxCount = player.accelCount();
-        int waitTurn = player.accelWaitTurn();
-        
-        int lotusesCount = lotuses.count();
-        float lastDistance = 0;
-        Lotus& prev = lotuses[0];
-        for (int i = 0; i < lotusesCount; ++i) {
-            Lotus& lotus = lotuses[(i + 1) % lotusesCount];
-            float distance = (lotus.pos() - prev.pos()).length();
-            prev = lotus;
-            wholeDistance += distance;
-            if (i == lotusesCount - 1) {
-                lastDistance = distance;
-            }
-        }
-        // 総距離の算出
-        wholeDistance = wholeDistance * 3 - lastDistance + initialDistance;
-        
+
         float v0 = Parameter::CharaInitAccelCount;
         float a = -1 * Parameter::CharaAccelSpeed();
         float stopTime = v0 / -a;
+        const Chara& player = aStageAccessor.player();
+                
+        int waitTurn = player.accelWaitTurn();
+       
+        wholeDistance = calcWholeDistance(aStageAccessor);
         
         // 1回のアクセルで進める総距離
         const float distancePerAccell = (-(v0* v0) / (2 * a));
@@ -140,7 +169,7 @@ namespace hpc {
             Vec2 goal = target + normalized * lotuses[player.targetLotusNo()].radius();
             
             goal -= stream * t;
-            if ( !isReachInCurrentAccel(player, target) ) {
+            if ( !isReachInCurrentAccel(player, goal) ) {
                 return Action::Accel(goal);
             }
         }
@@ -148,28 +177,6 @@ namespace hpc {
         ++sTimer;
         return Action::Wait();
     }
-    
-    // 今のアクセルで到達可能な地点
-    Vec2 canReachCurrentAccelPos(const Chara& player) {
-        auto v0 = player.vel().length();
-        auto a = Parameter::CharaDecelSpeed();
-        auto length = (-(v0* v0) / (2 * a));
-        auto normalized = player.vel();
-        normalized.normalize();
-        Vec2 currentPos = player.pos();
-        return currentPos + normalized * length;
-    }
-    
-    // targetに現在のアクセルだけで到達可能かどうか
-    bool Answer::isReachInCurrentAccel(const Chara& player, Vec2 target)
-    {
-        if ( (player.pos() - target).squareLength() < Parameter::CharaRadius() * 2 ) {
-            return true;
-        }
-        Vec2 goal = canReachCurrentAccelPos(player);
-        return (goal - target).squareLength() <= Parameter::CharaRadius() * 2;
-    }
-    
     
 }
 

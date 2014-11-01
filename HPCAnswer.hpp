@@ -26,7 +26,6 @@ namespace hpc {
     public:
         static void Init(const StageAccessor& aStageAccessor);              ///< 各ステージ開始時に呼び出されます。
         static Action GetNextAction(const StageAccessor& aStageAccessor);   ///< 次の動作を決定します。
-        static bool isReachInCurrentAccel(const Chara& player, Vec2 target);
     private:
         Answer();
     };
