@@ -81,22 +81,24 @@ namespace hpc {
         const Chara& player = aStageAccessor.player();
         
         Vec2 initialPosition = player.pos();
-        float initialDistance = (lotuses[0].pos() - initialPosition).length();
-        
         int lotusesCount = lotuses.count();
-        float lastDistance = 0;
-        Lotus& prev = lotuses[0];
+        Vec2 current = player.pos();
+        Vec2 firstTarget = getNextTarget(0, aStageAccessor);
+        // 最初の距離
+        float initialDistance2 = (firstTarget - current).squareLength();
+        current = firstTarget;
+        float lastDistance2 = 0;
         for (int i = 0; i < lotusesCount; ++i) {
-            Lotus& lotus = lotuses[(i + 1) % lotusesCount];
-            float d = (lotus.pos() - prev.pos()).length();
-            prev = lotus;
-            distance += d;
+            Vec2 nextTarget = getNextTarget((i + 1) % lotuses.count(), aStageAccessor);
+            float partialDistance2 = (nextTarget - current).squareLength();
+            distance += partialDistance2;
+            current = nextTarget;
             if (i == lotusesCount - 1) {
-                lastDistance = d;
+                lastDistance2 = partialDistance2;
             }
         }
         // 総距離の算出
-        distance = distance * 3 - lastDistance + initialDistance;
+        distance = Math::Sqrt(distance * 9 - lastDistance2 + initialDistance2);
         return distance;
     }
     
@@ -136,9 +138,10 @@ namespace hpc {
         } else {
             accelPerTurn = allTime / player.accelCount();
         }
-        accelPerTurn += 0.08; // 切り上げ
         //std::cout << "Stage : " << stageNo << std::endl;
         //std::cout << accelPerTurn << std::endl;
+        
+        // 最後に通ったハス
         lastTargetLotusNo = player.targetLotusNo();
         ++stageNo;
     }
@@ -159,7 +162,7 @@ namespace hpc {
         bool doAccel = false;
         // if (ac > 0) {
         
-        // 前回と変わってたら
+        // 前回と目的地が変わってたらアクセル踏み直す
         if (lastTargetLotusNo != player.targetLotusNo()) {
             doAccel = true;
         }
