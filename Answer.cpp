@@ -30,7 +30,29 @@ namespace {
 
 /// プロコン問題環境を表します。
 namespace hpc {
-
+    
+    Vec2 getNextTarget(int lotusNo, const StageAccessor& aStageAccessor)
+    {
+        const float v0 = Parameter::CharaAccelSpeed();
+        const float d = -Parameter::CharaDecelSpeed();
+        float t = -(v0 / d);
+        const Field& field = aStageAccessor.field();
+        const LotusCollection& lotuses = aStageAccessor.lotuses();
+        
+        Vec2 stream = field.flowVel();
+        
+        Vec2 target = lotuses[lotusNo].pos();
+        Vec2 nextTarget = lotuses[(lotusNo + 1) % lotuses.count()].pos();
+        auto sub = nextTarget - target;
+        auto normalized = sub;
+        normalized.normalize();
+        
+        Vec2 goal = target + normalized * lotuses[lotusNo].radius();
+        
+        goal -= stream * t;
+        return goal;
+    }
+    
     // 今のアクセルで到達可能な地点
     Vec2 canReachCurrentAccelPos(const Chara& player) {
         auto v0 = player.vel().length();
@@ -60,7 +82,7 @@ namespace hpc {
         
         Vec2 initialPosition = player.pos();
         float initialDistance = (lotuses[0].pos() - initialPosition).length();
- 
+        
         int lotusesCount = lotuses.count();
         float lastDistance = 0;
         Lotus& prev = lotuses[0];
@@ -77,7 +99,7 @@ namespace hpc {
         distance = distance * 3 - lastDistance + initialDistance;
         return distance;
     }
-
+    
     //------------------------------------------------------------------------------
     /// 各ステージ開始時に呼び出されます。
     ///
@@ -90,14 +112,14 @@ namespace hpc {
         accelPerTurn = 0;
         wholeDistance = 0;
         
-
+        
         float v0 = Parameter::CharaInitAccelCount;
         float a = -1 * Parameter::CharaAccelSpeed();
         float stopTime = v0 / -a;
         const Chara& player = aStageAccessor.player();
-                
+        
         int waitTurn = player.accelWaitTurn();
-       
+        
         wholeDistance = calcWholeDistance(aStageAccessor);
         
         // 1回のアクセルで進める総距離
@@ -120,7 +142,7 @@ namespace hpc {
         lastTargetLotusNo = player.targetLotusNo();
         ++stageNo;
     }
-
+    
     //------------------------------------------------------------------------------
     /// 各ターンでの動作を返します。
     ///
@@ -130,21 +152,11 @@ namespace hpc {
     Action Answer::GetNextAction(const StageAccessor& aStageAccessor)
     {
         const Chara& player = aStageAccessor.player();
-        const LotusCollection& lotuses = aStageAccessor.lotuses();
-        const Field& field = aStageAccessor.field();
-        
-        Vec2 stream = field.flowVel();
-        Vec2 current = player.pos();
-        const auto ds2 = Parameter::CharaDecelSpeed() * Parameter::CharaDecelSpeed();
-        const auto v0 = Parameter::CharaAccelSpeed();
-        const auto d = -Parameter::CharaDecelSpeed();
-        auto t = -(v0 / d);
         //auto distance =
         // 進む距離
-
+        
         
         bool doAccel = false;
-        int ac = player.accelCount();
         // if (ac > 0) {
         
         // 前回と変わってたら
@@ -160,15 +172,7 @@ namespace hpc {
         
         if (doAccel) {
             sTimer = 0;
-            Vec2 target = lotuses[player.targetLotusNo()].pos();
-            Vec2 nextTarget = lotuses[(player.targetLotusNo() + 1) % lotuses.count()].pos();
-            auto sub = nextTarget - target;
-            auto normalized = sub;
-            normalized.normalize();
-            
-            Vec2 goal = target + normalized * lotuses[player.targetLotusNo()].radius();
-            
-            goal -= stream * t;
+            Vec2 goal = getNextTarget(player.targetLotusNo(), aStageAccessor);
             if ( !isReachInCurrentAccel(player, goal) ) {
                 return Action::Accel(goal);
             }
