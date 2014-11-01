@@ -80,25 +80,24 @@ namespace hpc {
         auto lotuses = aStageAccessor.lotuses();
         const Chara& player = aStageAccessor.player();
         
-        Vec2 initialPosition = player.pos();
         int lotusesCount = lotuses.count();
         Vec2 current = player.pos();
         Vec2 firstTarget = getNextTarget(0, aStageAccessor);
         // 最初の距離
-        float initialDistance2 = (firstTarget - current).squareLength();
+        float initialDistance = (firstTarget - current).length();
         current = firstTarget;
-        float lastDistance2 = 0;
+        float lastDistance = 0;
         for (int i = 0; i < lotusesCount; ++i) {
             Vec2 nextTarget = getNextTarget((i + 1) % lotuses.count(), aStageAccessor);
-            float partialDistance2 = (nextTarget - current).squareLength();
-            distance += partialDistance2;
+            float partialDistance = (nextTarget - current).length();
+            distance += partialDistance;
             current = nextTarget;
             if (i == lotusesCount - 1) {
-                lastDistance2 = partialDistance2;
+                lastDistance = partialDistance;
             }
         }
         // 総距離の算出
-        distance = Math::Sqrt(distance * 9 - lastDistance2 + initialDistance2);
+        distance = distance * 3 - lastDistance + initialDistance;
         return distance;
     }
     
@@ -130,16 +129,14 @@ namespace hpc {
         // 突破までに必要な最低アクセル回数
         auto requiredAccelCount = wholeDistance / distancePerAccell;
         // 最低限アクセルを使ったときのクリアターン数
-        const float allTime = requiredAccelCount * stopTime;
+        const float estimateTurn = requiredAccelCount * stopTime * 8.8;
         
         accelPerTurn = 0;
-        if (waitTurn > 0) {
-            accelPerTurn = allTime / ((allTime / waitTurn) + player.accelCount());
-        } else {
-            accelPerTurn = allTime / player.accelCount();
-        }
+        accelPerTurn = estimateTurn / ((estimateTurn / waitTurn) + player.accelCount());
         //std::cout << "Stage : " << stageNo << std::endl;
-        //std::cout << accelPerTurn << std::endl;
+        //std::cout << wholeDistance << std::endl;
+        //std::cout << distancePerAccell << std::endl;
+        //std::cout << estimateTurn << std::endl;
         
         // 最後に通ったハス
         lastTargetLotusNo = player.targetLotusNo();
