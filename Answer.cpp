@@ -41,26 +41,73 @@ namespace hpc {
             t = v0 / -a;
         }
         return v0 * t + 0.5 * a * t * t;
-    
     }
     
-    Vec2 getNextTarget(int lotusNo, const StageAccessor& aStageAccessor)
+    /// ハスa, b, cを通るときに、一番いい感じでbに接触できるようなb点を返します
+    Vec2 getTargetByThreePoints(const Lotus& target, Vec2 prevPoint, Vec2 nextPoint)
     {
+        // acベクトルを生成
+        Vec2 ac = nextPoint - prevPoint;
+        
+        // acベクトルを90度回転する
+        ac.rotate(90);
+        
+        ac.normalize();
+        
+        ac *= target.radius();
+        
+        // 逆バージョンも作る
+        Vec2 reversed = ac;
+        reversed *= -1;
+        
+        Vec2 target0 = target.pos() + ac;
+        Vec2 target1 = target.pos() + reversed;
+        
+        // 近い方を返す
+        if ((target0 - nextPoint).squareLength() < (target1 - nextPoint).squareLength() ) {
+            return target0;
+        }
+        return target1;
+    }
+    
+    Vec2 getNextTarget(int targetLotusNo, const StageAccessor& aStageAccessor, int loopNo)
+    {
+        
         const float v0 = Parameter::CharaAccelSpeed();
         const float d = -Parameter::CharaDecelSpeed();
         float t = -(v0 / d);
+        
+        const Chara& player = aStageAccessor.player();
         const Field& field = aStageAccessor.field();
         const LotusCollection& lotuses = aStageAccessor.lotuses();
+        int lotusCount = lotuses.count();
         
+        Vec2 goal;
+        if (targetLotusNo == 0 && loopNo == 1) {
+            // まだ一つも回ってないとき
+            // 初期位置、1個目、2個目で三角形を作る
+            Vec2 prevPoint = player.pos(); // 初期位置
+            Vec2 nextPoint = lotuses[1].pos(); // 1個目
+            const Lotus& target = lotuses[0];
+            goal = getTargetByThreePoints(target, prevPoint, nextPoint);
+        } else if (targetLotusNo == lotusCount - 1 && loopNo == 3) {
+            // 最後の一つのとき
+            // 2点だけを参照する
+            Vec2 target = lotuses[targetLotusNo].pos();
+            Vec2 prevTarget = lotuses[(targetLotusNo - 1 + lotusCount) % lotuses.count()].pos();
+            auto sub = target - prevTarget;
+            auto normalized = sub;
+            normalized.normalize();
+            
+            goal = target + normalized * lotuses[targetLotusNo].radius();
+        } else {
+            // それ以外の時
+            Vec2 prevPoint = lotuses[(targetLotusNo - 1 + lotusCount) % lotusCount].pos(); // 1つ前
+            Vec2 nextPoint = lotuses[(targetLotusNo + 1) % lotusCount].pos(); // 1つ後
+            const Lotus& target = lotuses[targetLotusNo];
+            goal = getTargetByThreePoints(target, prevPoint, nextPoint);
+        }
         Vec2 stream = field.flowVel();
-        
-        Vec2 target = lotuses[lotusNo].pos();
-        Vec2 nextTarget = lotuses[(lotusNo + 1) % lotuses.count()].pos();
-        Vec2 sub = nextTarget - target;
-        Vec2 normalized = sub;
-        normalized.normalize();
-        
-        Vec2 goal = target + normalized * lotuses[lotusNo].radius();
         
         goal -= stream * t;
         return goal;
@@ -95,22 +142,24 @@ namespace hpc {
         
         int lotusesCount = lotuses.count();
         Vec2 current = player.pos();
-        Vec2 firstTarget = getNextTarget(0, aStageAccessor);
+        Vec2 firstTarget = getNextTarget(0, aStageAccessor, 1);
         // 最初の距離
         float initialDistance = (firstTarget - current).length();
         current = firstTarget;
         float lastDistance = 0;
-        for (int i = 0; i < lotusesCount; ++i) {
-            Vec2 nextTarget = getNextTarget((i + 1) % lotuses.count(), aStageAccessor);
-            float partialDistance = (nextTarget - current).length();
+        for (int i = 0; i < lotusesCount * 3; ++i) {
+            int index = i % 3;
+            int loopCount = Math::Ceil(i / 3);
+            int nextLoopCount = Math::Ceil((i + 1) / 3);
+            Vec2 target = getNextTarget(index, aStageAccessor, loopCount);
+            Vec2 nextTarget = getNextTarget((index + 1) % lotuses.count(), aStageAccessor, nextLoopCount);
+            
+            float partialDistance = (nextTarget - target).length();
             distance += partialDistance;
-            current = nextTarget;
-            if (i == lotusesCount - 1) {
-                lastDistance = partialDistance;
-            }
+            
         }
         // 総距離の算出
-        distance = distance * 3 - lastDistance + initialDistance;
+        distance += initialDistance;
         return distance;
     }
     
@@ -204,10 +253,11 @@ namespace hpc {
         }
         
         lastTargetLotusNo = player.targetLotusNo();
+        int loopCount = Math::Ceil(player.passedLotusCount() / aStageAccessor.lotuses().count());
         
         if (doAccel) {
             sTimer = 0;
-            Vec2 goal = getNextTarget(player.targetLotusNo(), aStageAccessor);
+            Vec2 goal = getNextTarget(player.targetLotusNo(), aStageAccessor, loopCount);
             if ( !isReachInCurrentAccel(player, goal) ) {
                 return Action::Accel(goal);
             }
