@@ -95,8 +95,8 @@ namespace hpc {
             // 2点だけを参照する
             Vec2 target = lotuses[targetLotusNo].pos();
             Vec2 prevTarget = lotuses[(targetLotusNo - 1 + lotusCount) % lotuses.count()].pos();
-            auto sub = target - prevTarget;
-            auto normalized = sub;
+            Vec2 sub = target - prevTarget;
+            Vec2 normalized = sub;
             normalized.normalize();
             
             goal = target + normalized * lotuses[targetLotusNo].radius();
