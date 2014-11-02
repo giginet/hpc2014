@@ -35,8 +35,8 @@ namespace hpc {
     float distanceAfterTurn(float t, const StageAccessor& aStageAccessor)
     {
         const Chara& player = aStageAccessor.player();
-        auto v0 = Parameter::CharaAccelSpeed();
-        auto a = -Parameter::CharaDecelSpeed();
+        float v0 = Parameter::CharaAccelSpeed();
+        float a = -Parameter::CharaDecelSpeed();
         if (t >= v0 / -a) {
             t = v0 / -a;
         }
@@ -56,8 +56,8 @@ namespace hpc {
         
         Vec2 target = lotuses[lotusNo].pos();
         Vec2 nextTarget = lotuses[(lotusNo + 1) % lotuses.count()].pos();
-        auto sub = nextTarget - target;
-        auto normalized = sub;
+        Vec2 sub = nextTarget - target;
+        Vec2 normalized = sub;
         normalized.normalize();
         
         Vec2 goal = target + normalized * lotuses[lotusNo].radius();
@@ -68,10 +68,10 @@ namespace hpc {
     
     // 今のアクセルで到達可能な地点
     Vec2 canReachCurrentAccelPos(const Chara& player) {
-        auto v0 = player.vel().length();
-        auto a = Parameter::CharaDecelSpeed();
-        auto length = (-(v0* v0) / (2 * a));
-        auto normalized = player.vel();
+        float v0 = player.vel().length();
+        float a = Parameter::CharaDecelSpeed();
+        float length = (-(v0* v0) / (2 * a));
+        Vec2 normalized = player.vel();
         normalized.normalize();
         Vec2 currentPos = player.pos();
         return currentPos + normalized * length;
@@ -90,7 +90,7 @@ namespace hpc {
     float calcWholeDistance(const StageAccessor& aStageAccessor)
     {
         float distance = 0;
-        auto lotuses = aStageAccessor.lotuses();
+        const LotusCollection& lotuses = aStageAccessor.lotuses();
         const Chara& player = aStageAccessor.player();
         
         int lotusesCount = lotuses.count();
@@ -141,7 +141,7 @@ namespace hpc {
         
         /*
         // 突破までに必要な最低アクセル回数
-        auto requiredAccelCount = wholeDistance / distancePerAccell;
+        float requiredAccelCount = wholeDistance / distancePerAccell;
         // 最低限アクセルを使ったときのクリアターン数
         // estimateの初期値
         const float estimateTurn = requiredAccelCount * stopTime * 8.8;
