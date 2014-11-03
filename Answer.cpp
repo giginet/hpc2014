@@ -24,7 +24,9 @@ namespace {
     int stageNo = 0;
     int lastTargetLotusNo = 0;
     float realDistance = 0;
+    bool changedTarget = false;
     Vec2 lastPlayerPosition;
+    Vec2 initialPlayerPosition;
     
     // 最後にアクセルを踏んだ地点
     Vec2 lastAccellPos;
@@ -32,7 +34,7 @@ namespace {
 
 /// プロコン問題環境を表します。
 namespace hpc {
-
+    
     // 加速してからtターン後の位置を返します
     float distanceAfterTurn(float t, const StageAccessor& aStageAccessor)
     {
@@ -56,7 +58,7 @@ namespace hpc {
         
         ac.normalize();
         
-        ac *= target.radius();
+        ac *= (target.radius() * 0.8);
         
         // 逆バージョンも作る
         Vec2 reversed = ac * -1;
@@ -89,20 +91,10 @@ namespace hpc {
         if (targetLotusNo == 0 && loopNo == 1) {
             // まだ一つも回ってないとき
             // 初期位置、1個目、2個目で三角形を作る
-            Vec2 prevPoint = player.pos(); // 初期位置
+            Vec2 prevPoint = initialPlayerPosition; // 初期位置
             Vec2 nextPoint = lotuses[1].pos(); // 1個目
             const Lotus& target = lotuses[0];
             goal = getTargetByThreePoints(target, prevPoint, nextPoint);
-        } else if (targetLotusNo == lotusCount - 1 && loopNo == 3) {
-            // 最後の一つのとき
-            // 2点だけを参照する
-            Vec2 target = lotuses[targetLotusNo].pos();
-            Vec2 prevTarget = lotuses[(targetLotusNo - 1 + lotusCount) % lotuses.count()].pos();
-            Vec2 sub = prevTarget - target;
-            Vec2 normalized = sub;
-            normalized.normalize();
-            
-            goal = target + normalized * lotuses[targetLotusNo].radius();
         } else {
             // それ以外の時
             Vec2 prevPoint = lotuses[(targetLotusNo - 1 + lotusCount) % lotusCount].pos(); // 1つ前
@@ -179,11 +171,13 @@ namespace hpc {
         wholeDistance = 0;
         //std::cout << "rd" << realDistance << std::endl;
         realDistance = 0;
+        changedTarget = false;
         
         float v0 = Parameter::CharaInitAccelCount;
         float a = -1 * Parameter::CharaAccelSpeed();
         float stopTime = v0 / -a;
         const Chara& player = aStageAccessor.player();
+        initialPlayerPosition = player.pos();
         
         lastPlayerPosition = player.pos();
         int waitTurn = player.accelWaitTurn();
@@ -194,19 +188,19 @@ namespace hpc {
         const float distancePerAccell = (-(v0* v0) / (2 * a));
         
         /*
-        // 突破までに必要な最低アクセル回数
-        float requiredAccelCount = wholeDistance / distancePerAccell;
-        // 最低限アクセルを使ったときのクリアターン数
-        // estimateの初期値
-        const float estimateTurn = requiredAccelCount * stopTime * 8.8;
-        
-        */
+         // 突破までに必要な最低アクセル回数
+         float requiredAccelCount = wholeDistance / distancePerAccell;
+         // 最低限アクセルを使ったときのクリアターン数
+         // estimateの初期値
+         const float estimateTurn = requiredAccelCount * stopTime * 8.8;
+         
+         */
         
         float estimateTurn = 0;
         // accelPerTurnを推測する
         for (int apt = 1; apt < 1000; ++apt) {
             float distancePerAccel = distanceAfterTurn(apt, aStageAccessor);
-            float et = wholeDistance * 7.85 / distancePerAccel;
+            float et = wholeDistance * 8 / distancePerAccel;
             float requiredAccelCount = et / apt;
             float allEnableAccelCount = player.accelCount() + et / player.accelWaitTurn();
             if (allEnableAccelCount >= requiredAccelCount) {
@@ -215,6 +209,7 @@ namespace hpc {
                 break;
             }
         }
+        //accelPerTurn = player.accelWaitTurn() - 1;
         
         //accelPerTurn = 0;
         //accelPerTurn = estimateTurn / ((estimateTurn / waitTurn) + player.accelCount());
@@ -224,7 +219,7 @@ namespace hpc {
         //std::cout << "et " << estimateTurn << std::endl;
         //std::cout << "apt " << accelPerTurn << std::endl;
         //std::cout << "wd " << wholeDistance << std::endl;
-
+        
         
         
         // 最後に通ったハス
@@ -251,20 +246,29 @@ namespace hpc {
         // 前回と目的地が変わってたらアクセル踏み直す
         if (lastTargetLotusNo != player.targetLotusNo()) {
             doAccel = true;
+            changedTarget = true;
         }
         
         if (sTimer >= accelPerTurn) {
             doAccel = true;
         }
         
+        if (changedTarget) {
+            // ターゲットが変わってたらdoaccel
+            doAccel = true;
+        }
+        
         lastTargetLotusNo = player.targetLotusNo();
         int loopCount = (int)(player.passedLotusCount() / aStageAccessor.lotuses().count()) + 1;
         if (doAccel) {
-            sTimer = 0;
-            Vec2 goal = getNextTarget(player.targetLotusNo(), aStageAccessor, loopCount);
-            //if ( !isReachInCurrentAccel(player, goal) ) {
+            if (player.accelCount() > 0) {
+                sTimer = 0;
+                changedTarget = false;
+                Vec2 goal = getNextTarget(player.targetLotusNo(), aStageAccessor, loopCount);
+                //if ( !isReachInCurrentAccel(player, goal) ) {
                 return Action::Accel(goal);
-            //}
+                //}
+            }
         }
         realDistance += (player.pos() - lastPlayerPosition).length();
         
