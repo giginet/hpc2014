@@ -25,6 +25,9 @@ namespace {
     Vec2 lastPlayerPosition;
     Vec2 initialPlayerPosition;
     
+    float wholeDistance = 0;
+    float accelPerTurn = 0;
+    
     // 最後にアクセルを踏んだ地点
     Vec2 lastAccellPos;
     
@@ -60,7 +63,7 @@ namespace hpc {
         
         ac.normalize();
         
-        ac *= (target.radius() * 0.8);
+        ac *= (target.radius() * 0.5);
         
         // 逆バージョンも作る
         Vec2 reversed = ac * -1;
@@ -173,11 +176,14 @@ namespace hpc {
         realDistance = 0;
         changedTarget = false;
         
+        wholeDistance = 0;
+        accelPerTurn = 0;
+        
         const Chara& player = aStageAccessor.player();
         initialPlayerPosition = player.pos();
         lastPlayerPosition = player.pos();
         
-        /*
+        
         float v0 = Parameter::CharaInitAccelCount;
         float a = -1 * Parameter::CharaAccelSpeed();
         float stopTime = v0 / -a;
@@ -187,22 +193,21 @@ namespace hpc {
         wholeDistance = calcWholeDistance(aStageAccessor);
         
         // 1回のアクセルで進める総距離
-        const float distancePerAccell = (-(v0* v0) / (2 * a));*/
+        const float distancePerAccell = (-(v0* v0) / (2 * a));
         
-        /*
-         // 突破までに必要な最低アクセル回数
-         float requiredAccelCount = wholeDistance / distancePerAccell;
-         // 最低限アクセルを使ったときのクリアターン数
-         // estimateの初期値
-         const float estimateTurn = requiredAccelCount * stopTime * 8.8;
-         
-         */
-        /*
+        
+        // 突破までに必要な最低アクセル回数
+        float requiredAccelCount = wholeDistance / distancePerAccell;
+        // 最低限アクセルを使ったときのクリアターン数
+        // estimateの初期値
+        //const float estimateTurn = requiredAccelCount * stopTime * 8.8;
+        
+        
         float estimateTurn = 0;
         // accelPerTurnを推測する
         for (int apt = 1; apt < 1000; ++apt) {
             float distancePerAccel = distanceAfterTurn(apt, aStageAccessor);
-            float et = wholeDistance * 8.4 / distancePerAccel;
+            float et = wholeDistance * 8.8 / distancePerAccel;
             float requiredAccelCount = et / apt;
             float allEnableAccelCount = player.accelCount() + et / player.accelWaitTurn();
             if (allEnableAccelCount >= requiredAccelCount) {
@@ -210,7 +215,7 @@ namespace hpc {
                 accelPerTurn = apt;
                 break;
             }
-        }*/
+        }
         //accelPerTurn = player.accelWaitTurn() - 1;
         
         //accelPerTurn = 0;
@@ -263,7 +268,7 @@ namespace hpc {
         // lastPlayerPosition更新
         lastPlayerPosition = player.pos();
         
-        if (sTimer >= player.accelWaitTurn() && player.accelCount() > 1) {
+        if (sTimer >= accelPerTurn && player.accelCount() > 1) {
             doAccel = true;
         }
         
@@ -278,7 +283,7 @@ namespace hpc {
             if (player.accelCount() > 0) {
                 changedTarget = false;
                 //if ( !isReachInCurrentAccel(player, goal) ) {
-                    return Action::Accel(goal);
+                return Action::Accel(goal);
                 //}
             }
         }
