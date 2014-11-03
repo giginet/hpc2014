@@ -19,17 +19,19 @@ namespace {
     
     /// タイマー
     int sTimer = 0;
-    float accelPerTurn = 0;
-    float wholeDistance = 0;
-    int stageNo = 0;
+    
     int lastTargetLotusNo = 0;
-    float realDistance = 0;
     bool changedTarget = false;
     Vec2 lastPlayerPosition;
     Vec2 initialPlayerPosition;
     
     // 最後にアクセルを踏んだ地点
     Vec2 lastAccellPos;
+    
+    // デバッグ用
+    int stageNo = 0;
+    float realDistance = 0;
+    
 }
 
 /// プロコン問題環境を表します。
@@ -167,25 +169,25 @@ namespace hpc {
     void Answer::Init(const StageAccessor& aStageAccessor)
     {
         sTimer = 1000;
-        accelPerTurn = 0;
-        wholeDistance = 0;
         //std::cout << "rd" << realDistance << std::endl;
         realDistance = 0;
         changedTarget = false;
         
+        const Chara& player = aStageAccessor.player();
+        initialPlayerPosition = player.pos();
+        lastPlayerPosition = player.pos();
+        
+        /*
         float v0 = Parameter::CharaInitAccelCount;
         float a = -1 * Parameter::CharaAccelSpeed();
         float stopTime = v0 / -a;
-        const Chara& player = aStageAccessor.player();
-        initialPlayerPosition = player.pos();
         
-        lastPlayerPosition = player.pos();
         int waitTurn = player.accelWaitTurn();
         
         wholeDistance = calcWholeDistance(aStageAccessor);
         
         // 1回のアクセルで進める総距離
-        const float distancePerAccell = (-(v0* v0) / (2 * a));
+        const float distancePerAccell = (-(v0* v0) / (2 * a));*/
         
         /*
          // 突破までに必要な最低アクセル回数
@@ -195,12 +197,12 @@ namespace hpc {
          const float estimateTurn = requiredAccelCount * stopTime * 8.8;
          
          */
-        
+        /*
         float estimateTurn = 0;
         // accelPerTurnを推測する
         for (int apt = 1; apt < 1000; ++apt) {
             float distancePerAccel = distanceAfterTurn(apt, aStageAccessor);
-            float et = wholeDistance * 8 / distancePerAccel;
+            float et = wholeDistance * 8.4 / distancePerAccel;
             float requiredAccelCount = et / apt;
             float allEnableAccelCount = player.accelCount() + et / player.accelWaitTurn();
             if (allEnableAccelCount >= requiredAccelCount) {
@@ -208,7 +210,7 @@ namespace hpc {
                 accelPerTurn = apt;
                 break;
             }
-        }
+        }*/
         //accelPerTurn = player.accelWaitTurn() - 1;
         
         //accelPerTurn = 0;
@@ -243,13 +245,25 @@ namespace hpc {
         bool doAccel = false;
         // if (ac > 0) {
         
+        int loopCount = (int)(player.passedLotusCount() / aStageAccessor.lotuses().count()) + 1;
+        Vec2 goal = getNextTarget(player.targetLotusNo(), aStageAccessor, loopCount);
         // 前回と目的地が変わってたらアクセル踏み直す
         if (lastTargetLotusNo != player.targetLotusNo()) {
             doAccel = true;
             changedTarget = true;
+        } else {
+            // 前回と目的地は変わってないけど、前回より遠くなってたら即座に方向転換する
+            float currentDistance = (goal - player.pos()).squareLength();
+            float prevDistance = (goal - lastPlayerPosition).squareLength();
+            if (currentDistance > prevDistance) {
+                doAccel = true;
+            }
         }
         
-        if (sTimer >= accelPerTurn) {
+        // lastPlayerPosition更新
+        lastPlayerPosition = player.pos();
+        
+        if (sTimer >= player.accelWaitTurn() && player.accelCount() > 1) {
             doAccel = true;
         }
         
@@ -259,14 +273,12 @@ namespace hpc {
         }
         
         lastTargetLotusNo = player.targetLotusNo();
-        int loopCount = (int)(player.passedLotusCount() / aStageAccessor.lotuses().count()) + 1;
         if (doAccel) {
+            sTimer = 0;
             if (player.accelCount() > 0) {
-                sTimer = 0;
                 changedTarget = false;
-                Vec2 goal = getNextTarget(player.targetLotusNo(), aStageAccessor, loopCount);
                 //if ( !isReachInCurrentAccel(player, goal) ) {
-                return Action::Accel(goal);
+                    return Action::Accel(goal);
                 //}
             }
         }
