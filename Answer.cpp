@@ -23,6 +23,8 @@ namespace {
     float wholeDistance = 0;
     int stageNo = 0;
     int lastTargetLotusNo = 0;
+    float realDistance = 0;
+    Vec2 lastPlayerPosition;
     
     // 最後にアクセルを踏んだ地点
     Vec2 lastAccellPos;
@@ -50,21 +52,22 @@ namespace hpc {
         Vec2 ac = nextPoint - prevPoint;
         
         // acベクトルを90度回転する
-        ac.rotate(90);
+        ac.rotate(Math::DegToRad(90));
         
         ac.normalize();
         
         ac *= target.radius();
         
         // 逆バージョンも作る
-        Vec2 reversed = ac;
-        reversed *= -1;
+        Vec2 reversed = ac * -1;
         
         Vec2 target0 = target.pos() + ac;
         Vec2 target1 = target.pos() + reversed;
         
         // 近い方を返す
-        if ((target0 - nextPoint).squareLength() < (target1 - nextPoint).squareLength() ) {
+        float distance0 = (target0 - nextPoint).squareLength() + (target0 - prevPoint).squareLength();
+        float distance1 = (target1 - nextPoint).squareLength() + (target1 - prevPoint).squareLength();
+        if (distance0 < distance1) {
             return target0;
         }
         return target1;
@@ -95,7 +98,7 @@ namespace hpc {
             // 2点だけを参照する
             Vec2 target = lotuses[targetLotusNo].pos();
             Vec2 prevTarget = lotuses[(targetLotusNo - 1 + lotusCount) % lotuses.count()].pos();
-            Vec2 sub = target - prevTarget;
+            Vec2 sub = prevTarget - target;
             Vec2 normalized = sub;
             normalized.normalize();
             
@@ -149,7 +152,7 @@ namespace hpc {
         float lastDistance = 0;
         for (int i = 0; i < lotusesCount * 3; ++i) {
             int index = i % 3;
-            int loopCount = Math::Ceil(i / 3);
+            int loopCount = (int)(i / 3) + 1;
             int nextLoopCount = Math::Ceil((i + 1) / 3);
             Vec2 target = getNextTarget(index, aStageAccessor, loopCount);
             Vec2 nextTarget = getNextTarget((index + 1) % lotuses.count(), aStageAccessor, nextLoopCount);
@@ -174,13 +177,15 @@ namespace hpc {
         sTimer = 1000;
         accelPerTurn = 0;
         wholeDistance = 0;
-        
+        //std::cout << "rd" << realDistance << std::endl;
+        realDistance = 0;
         
         float v0 = Parameter::CharaInitAccelCount;
         float a = -1 * Parameter::CharaAccelSpeed();
         float stopTime = v0 / -a;
         const Chara& player = aStageAccessor.player();
         
+        lastPlayerPosition = player.pos();
         int waitTurn = player.accelWaitTurn();
         
         wholeDistance = calcWholeDistance(aStageAccessor);
@@ -199,9 +204,9 @@ namespace hpc {
         
         float estimateTurn = 0;
         // accelPerTurnを推測する
-        for (int apt = 1; apt < 100; ++apt) {
+        for (int apt = 1; apt < 1000; ++apt) {
             float distancePerAccel = distanceAfterTurn(apt, aStageAccessor);
-            float et = wholeDistance * 8.0 / distancePerAccel;
+            float et = wholeDistance * 7.85 / distancePerAccel;
             float requiredAccelCount = et / apt;
             float allEnableAccelCount = player.accelCount() + et / player.accelWaitTurn();
             if (allEnableAccelCount >= requiredAccelCount) {
@@ -253,15 +258,15 @@ namespace hpc {
         }
         
         lastTargetLotusNo = player.targetLotusNo();
-        int loopCount = Math::Ceil(player.passedLotusCount() / aStageAccessor.lotuses().count());
-        
+        int loopCount = (int)(player.passedLotusCount() / aStageAccessor.lotuses().count()) + 1;
         if (doAccel) {
             sTimer = 0;
             Vec2 goal = getNextTarget(player.targetLotusNo(), aStageAccessor, loopCount);
-            if ( !isReachInCurrentAccel(player, goal) ) {
+            //if ( !isReachInCurrentAccel(player, goal) ) {
                 return Action::Accel(goal);
-            }
+            //}
         }
+        realDistance += (player.pos() - lastPlayerPosition).length();
         
         ++sTimer;
         return Action::Wait();
