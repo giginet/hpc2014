@@ -83,6 +83,7 @@ namespace hpc {
     Vec2 getNextTarget(int targetLotusNo, const StageAccessor& aStageAccessor, int loopNo)
     {
         
+        
         const float v0 = Parameter::CharaAccelSpeed();
         const float d = -Parameter::CharaDecelSpeed();
         float t = -(v0 / d);
@@ -146,20 +147,13 @@ namespace hpc {
         // 最初の距離
         float initialDistance = (firstTarget - current).length();
         current = firstTarget;
-        float lastDistance = 0;
-        for (int i = 0; i < lotusesCount * 3; ++i) {
-            int index = i % 3;
-            int loopCount = (int)(i / 3) + 1;
-            int nextLoopCount = Math::Ceil((i + 1) / 3);
-            Vec2 target = getNextTarget(index, aStageAccessor, loopCount);
-            Vec2 nextTarget = getNextTarget((index + 1) % lotuses.count(), aStageAccessor, nextLoopCount);
-            
-            float partialDistance = (nextTarget - target).length();
-            distance += partialDistance;
-            
+        for (int i = 0; i < lotusesCount; ++i) {
+            const Lotus& lotus = lotuses[i];
+            const Lotus& next = lotuses[(i + 1) % lotuses.count()];
+            distance += (next.pos() - lotus.pos()).length();
         }
         // 総距離の算出
-        distance += initialDistance;
+        distance = distance * 3 + initialDistance;
         return distance;
     }
     
@@ -187,47 +181,18 @@ namespace hpc {
         float v0 = Parameter::CharaInitAccelCount;
         float a = -1 * Parameter::CharaAccelSpeed();
         float stopTime = v0 / -a;
+        float waitTurn = player.accelWaitTurn();
         
-        int waitTurn = player.accelWaitTurn();
-        
-        wholeDistance = calcWholeDistance(aStageAccessor);
-        
-        // 1回のアクセルで進める総距離
-        const float distancePerAccell = (-(v0* v0) / (2 * a));
-        
-        
-        // 突破までに必要な最低アクセル回数
-        float requiredAccelCount = wholeDistance / distancePerAccell;
-        // 最低限アクセルを使ったときのクリアターン数
-        // estimateの初期値
-        //const float estimateTurn = requiredAccelCount * stopTime * 8.8;
-        
-        
-        float estimateTurn = 0;
-        // accelPerTurnを推測する
-        for (int apt = 1; apt < 1000; ++apt) {
-            float distancePerAccel = distanceAfterTurn(apt, aStageAccessor);
-            float et = wholeDistance * 8.8 / distancePerAccel;
-            float requiredAccelCount = et / apt;
-            float allEnableAccelCount = player.accelCount() + et / player.accelWaitTurn();
-            if (allEnableAccelCount >= requiredAccelCount) {
-                estimateTurn = et;
-                accelPerTurn = apt;
-                break;
-            }
+        // 平均速度を算出する
+        float averageSpeed = 0;
+        float wd = calcWholeDistance(aStageAccessor);
+        for (float as = 3.0; as < v0; as += 0.01 ) {
+            // 予想ターン数
+            // 仮でざっくり実装する
+            float estimateTurn = wd / as;
+            int accelCount = (estimateTurn / waitTurn) + player.accelCount();
+            
         }
-        //accelPerTurn = player.accelWaitTurn() - 1;
-        
-        //accelPerTurn = 0;
-        //accelPerTurn = estimateTurn / ((estimateTurn / waitTurn) + player.accelCount());
-        //std::cout << "Stage : " << stageNo << std::endl;
-        //std::cout << wholeDistance << std::endl;
-        //std::cout << distancePerAccell << std::endl;
-        //std::cout << "et " << estimateTurn << std::endl;
-        //std::cout << "apt " << accelPerTurn << std::endl;
-        //std::cout << "wd " << wholeDistance << std::endl;
-        
-        
         
         // 最後に通ったハス
         lastTargetLotusNo = player.targetLotusNo();
@@ -243,33 +208,54 @@ namespace hpc {
     Action Answer::GetNextAction(const StageAccessor& aStageAccessor)
     {
         const Chara& player = aStageAccessor.player();
+        const EnemyAccessor& enemies = aStageAccessor.enemies();
+        const LotusCollection& lotuses = aStageAccessor.lotuses();
         //auto distance =
         // 進む距離
         
+        int maxLotusCount = lotuses.count();
+        
+        // 最低限残しておくアクセル回数
+        int saveAccelThreshold = 2;
+        /*if (player.passedLotusCount() > maxLotusCount / 2) {
+            // 最後の方は自重しなくする
+            saveAccelThreshold = 2;
+        }*/
         
         bool doAccel = false;
         // if (ac > 0) {
         
         int loopCount = (int)(player.passedLotusCount() / aStageAccessor.lotuses().count()) + 1;
         Vec2 goal = getNextTarget(player.targetLotusNo(), aStageAccessor, loopCount);
+        Vec2 sub = goal - player.pos();
+        
         // 前回と目的地が変わってたらアクセル踏み直す
-        if (lastTargetLotusNo != player.targetLotusNo()) {
+        if (lastTargetLotusNo != player.targetLotusNo() && player.accelCount() >= saveAccelThreshold - 1) {
             doAccel = true;
             changedTarget = true;
+            sTimer = -5;
         } else {
             // 前回と目的地は変わってないけど、前回より遠くなってたら即座に方向転換する
             float currentDistance = (goal - player.pos()).squareLength();
             float prevDistance = (goal - lastPlayerPosition).squareLength();
             if (currentDistance > prevDistance) {
                 doAccel = true;
+                //sTimer = -5;
             }
         }
         
         // lastPlayerPosition更新
         lastPlayerPosition = player.pos();
         
-        if (sTimer >= accelPerTurn && player.accelCount() > 1) {
-            doAccel = true;
+        if (sTimer >= player.accelWaitTurn() && player.accelCount() >= saveAccelThreshold) {
+            // これ以上加速しなくてもたどり着けそうなら加速しない
+            float stopTurn = player.vel().length() / Parameter::CharaDecelSpeed();
+            float v0 = player.vel().length();
+            float a = -Parameter::CharaDecelSpeed();
+            float length = v0 * stopTurn + 0.5 * a * stopTurn * stopTurn;
+            if (sub.length() >= length) {
+                doAccel = true;
+            }
         }
         
         if (changedTarget) {
@@ -279,17 +265,18 @@ namespace hpc {
         
         lastTargetLotusNo = player.targetLotusNo();
         if (doAccel) {
-            sTimer = 0;
             if (player.accelCount() > 0) {
+                if (sTimer > 0) sTimer = 0;
                 changedTarget = false;
                 //if ( !isReachInCurrentAccel(player, goal) ) {
                 return Action::Accel(goal);
                 //}
             }
+        } else {
+            ++sTimer;
         }
         realDistance += (player.pos() - lastPlayerPosition).length();
         
-        ++sTimer;
         return Action::Wait();
     }
     
