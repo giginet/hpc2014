@@ -28,8 +28,13 @@ namespace {
     float wholeDistance = 0;
     float accelPerTurn = 0;
     
+    float minSpeed = 0;
+    
     // 最後にアクセルを踏んだ地点
     Vec2 lastAccellPos;
+    
+    // 過去の移動履歴
+    Vec2 positionHistory[Parameter::GameTurnPerStage];
     
     // デバッグ用
     int stageNo = 0;
@@ -157,6 +162,19 @@ namespace hpc {
         return distance;
     }
     
+    // 渡されたターン数連続で指定座標まで遠ざかっていればtrueを返します
+    bool isFartherPastTurn(int turn, int currentTurn, Vec2 targetPos)
+    {
+        for (int i = turn; i > 1; --i) {
+            Vec2 prevPos = positionHistory[currentTurn - i - 1];
+            Vec2 currentPos = positionHistory[currentTurn - i];
+            if ((targetPos - prevPos).squareLength() < (targetPos - currentPos).squareLength()) {
+                return false;
+            }
+        }
+        return true;
+    }
+    
     //------------------------------------------------------------------------------
     /// 各ステージ開始時に呼び出されます。
     ///
@@ -174,8 +192,10 @@ namespace hpc {
         accelPerTurn = 0;
         
         const Chara& player = aStageAccessor.player();
+        const LotusCollection& lotuses = aStageAccessor.lotuses();
         initialPlayerPosition = player.pos();
         lastPlayerPosition = player.pos();
+        positionHistory[0] = player.pos();
         
         
         float v0 = Parameter::CharaInitAccelCount;
@@ -184,14 +204,18 @@ namespace hpc {
         float waitTurn = player.accelWaitTurn();
         
         // 平均速度を算出する
-        float averageSpeed = 0;
+        int lotusCount = lotuses.count();
         float wd = calcWholeDistance(aStageAccessor);
-        for (float as = 3.0; as < v0; as += 0.01 ) {
+        for (float apt = 1; apt < stopTime; ++apt) {
             // 予想ターン数
-            // 仮でざっくり実装する
-            float estimateTurn = wd / as;
+            float speed = v0 + a * (apt - 1);
+            float estimateTurn = wd / speed;
             int accelCount = (estimateTurn / waitTurn) + player.accelCount();
-            
+            int requiredAccel = estimateTurn / apt + (lotusCount * 3 - 1);
+            if (accelCount > requiredAccel) {
+                minSpeed = speed;
+                break;
+            }
         }
         
         // 最後に通ったハス
@@ -212,7 +236,6 @@ namespace hpc {
         const LotusCollection& lotuses = aStageAccessor.lotuses();
         //auto distance =
         // 進む距離
-        
         int maxLotusCount = lotuses.count();
         
         // 最低限残しておくアクセル回数
@@ -228,13 +251,18 @@ namespace hpc {
         int loopCount = (int)(player.passedLotusCount() / aStageAccessor.lotuses().count()) + 1;
         Vec2 goal = getNextTarget(player.targetLotusNo(), aStageAccessor, loopCount);
         Vec2 sub = goal - player.pos();
+        Vec2 vel = player.vel();
+        float diffAngle = 0;
+        if (vel.squareLength() > 0) {
+            diffAngle = Math::Abs(Math::RadToDeg(vel.angle(sub)));
+        }
         
         // 前回と目的地が変わってたらアクセル踏み直す
         if (lastTargetLotusNo != player.targetLotusNo() && player.accelCount() >= saveAccelThreshold - 1) {
             doAccel = true;
             changedTarget = true;
             sTimer = -5;
-        } else {
+        } else if (vel.length() < minSpeed && player.passedTurn() > 3) {
             // 前回と目的地は変わってないけど、前回より遠くなってたら即座に方向転換する
             float currentDistance = (goal - player.pos()).squareLength();
             float prevDistance = (goal - lastPlayerPosition).squareLength();
@@ -246,8 +274,9 @@ namespace hpc {
         
         // lastPlayerPosition更新
         lastPlayerPosition = player.pos();
+        positionHistory[player.passedTurn()] = player.pos();
         
-        if (sTimer >= player.accelWaitTurn() && player.accelCount() >= saveAccelThreshold) {
+        if (sTimer >= player.accelWaitTurn() && vel.length() < minSpeed && player.accelCount() >= saveAccelThreshold) {
             // これ以上加速しなくてもたどり着けそうなら加速しない
             float stopTurn = player.vel().length() / Parameter::CharaDecelSpeed();
             float v0 = player.vel().length();
@@ -268,9 +297,9 @@ namespace hpc {
             if (player.accelCount() > 0) {
                 if (sTimer > 0) sTimer = 0;
                 changedTarget = false;
-                //if ( !isReachInCurrentAccel(player, goal) ) {
-                return Action::Accel(goal);
-                //}
+                if ( !isReachInCurrentAccel(player, goal) ) {
+                    return Action::Accel(goal);
+                }
             }
         } else {
             ++sTimer;
