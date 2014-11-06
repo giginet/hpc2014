@@ -133,11 +133,11 @@ namespace hpc {
     // targetに現在のアクセルだけで到達可能かどうか
     bool isReachInCurrentAccel(const Chara& player, Vec2 target)
     {
-        if ( (player.pos() - target).squareLength() < Parameter::CharaRadius() * 2 ) {
+        if ( (player.pos() - target).squareLength() < Parameter::CharaRadius() ) {
             return true;
         }
         Vec2 goal = canReachCurrentAccelPos(player);
-        return (goal - target).squareLength() <= Parameter::CharaRadius() * 2;
+        return (goal - target).squareLength() <= Parameter::CharaRadius();
     }
     
     float calcWholeDistance(const StageAccessor& aStageAccessor)
@@ -239,10 +239,10 @@ namespace hpc {
         
         // 最低限残しておくアクセル回数
         int saveAccelThreshold = 2;
-        /*if (player.passedLotusCount() > maxLotusCount / 2) {
+        if (player.passedLotusCount() > maxLotusCount - 1) {
          // 最後の方は自重しなくする
-         saveAccelThreshold = 2;
-         }*/
+         saveAccelThreshold = 1;
+         }
         
         bool doAccel = false;
         // if (ac > 0) {
@@ -260,13 +260,13 @@ namespace hpc {
         if (lastTargetLotusNo != player.targetLotusNo() && player.accelCount() >= saveAccelThreshold - 1) {
             doAccel = true;
             changedTarget = true;
-            sTimer = -5;
+            //sTimer = -5;
         } else if (vel.length() < minSpeed) {
             // 前回と目的地は変わってないけど、前回より遠くなってたら即座に方向転換する
             float currentDistance = (goal - player.pos()).squareLength();
             float prevDistance = (goal - lastPlayerPosition).squareLength();
             if (currentDistance > prevDistance) {
-                doAccel = true;
+                //doAccel = true;
                 //sTimer = -5;
             }
         }
@@ -296,9 +296,9 @@ namespace hpc {
             if (player.accelCount() > 0) {
                 if (sTimer > 0) sTimer = 0;
                 changedTarget = false;
-                //if ( !isReachInCurrentAccel(player, goal) ) {
+                if ( !isReachInCurrentAccel(player, goal) ) {
                     return Action::Accel(goal);
-                //}
+                }
             }
         } else {
             ++sTimer;
