@@ -184,7 +184,6 @@ namespace hpc {
     void Answer::Init(const StageAccessor& aStageAccessor)
     {
         sTimer = 1000;
-        //std::cout << "rd" << realDistance << std::endl;
         realDistance = 0;
         changedTarget = false;
         
@@ -198,8 +197,8 @@ namespace hpc {
         positionHistory[0] = player.pos();
         
         
-        float v0 = Parameter::CharaInitAccelCount;
-        float a = -1 * Parameter::CharaAccelSpeed();
+        float v0 = Parameter::CharaAccelSpeed();
+        float a = -1 * Parameter::CharaDecelSpeed();
         float stopTime = v0 / -a;
         float waitTurn = player.accelWaitTurn();
         
@@ -211,7 +210,7 @@ namespace hpc {
             float speed = v0 + a * (apt - 1);
             float estimateTurn = wd / speed;
             int accelCount = (estimateTurn / waitTurn) + player.accelCount();
-            int requiredAccel = estimateTurn / apt + (lotusCount * 3 - 1);
+            int requiredAccel = (estimateTurn / apt) + (lotusCount * 3 - 1);
             if (accelCount > requiredAccel) {
                 minSpeed = speed;
                 break;
@@ -241,9 +240,9 @@ namespace hpc {
         // 最低限残しておくアクセル回数
         int saveAccelThreshold = 2;
         /*if (player.passedLotusCount() > maxLotusCount / 2) {
-            // 最後の方は自重しなくする
-            saveAccelThreshold = 2;
-        }*/
+         // 最後の方は自重しなくする
+         saveAccelThreshold = 2;
+         }*/
         
         bool doAccel = false;
         // if (ac > 0) {
@@ -262,7 +261,7 @@ namespace hpc {
             doAccel = true;
             changedTarget = true;
             sTimer = -5;
-        } else if (vel.length() < minSpeed && player.passedTurn() > 3) {
+        } else if (vel.length() < minSpeed) {
             // 前回と目的地は変わってないけど、前回より遠くなってたら即座に方向転換する
             float currentDistance = (goal - player.pos()).squareLength();
             float prevDistance = (goal - lastPlayerPosition).squareLength();
@@ -276,7 +275,7 @@ namespace hpc {
         lastPlayerPosition = player.pos();
         positionHistory[player.passedTurn()] = player.pos();
         
-        if (sTimer >= player.accelWaitTurn() && vel.length() < minSpeed && player.accelCount() >= saveAccelThreshold) {
+        if (vel.length() < minSpeed && player.accelCount() >= saveAccelThreshold) {
             // これ以上加速しなくてもたどり着けそうなら加速しない
             float stopTurn = player.vel().length() / Parameter::CharaDecelSpeed();
             float v0 = player.vel().length();
@@ -297,9 +296,9 @@ namespace hpc {
             if (player.accelCount() > 0) {
                 if (sTimer > 0) sTimer = 0;
                 changedTarget = false;
-                if ( !isReachInCurrentAccel(player, goal) ) {
+                //if ( !isReachInCurrentAccel(player, goal) ) {
                     return Action::Accel(goal);
-                }
+                //}
             }
         } else {
             ++sTimer;
