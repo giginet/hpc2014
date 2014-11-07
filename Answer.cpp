@@ -107,9 +107,9 @@ namespace hpc {
         int lotusCount = lotuses.count();
         
         int targetLotusNo = player.targetLotusNo();
-        int loopNo = player.roundCount();
+        int roundNo = player.roundCount();
         // もし、targetが最後ハスだったら
-        if (loopNo == 3 && targetLotusNo == lotusCount - 1)
+        if (roundNo == 2 && targetLotusNo == lotusCount - 1)
         {
             const Lotus& lotus = lotuses[targetLotusNo];
             Vec2 sub = player.pos() - lotus.pos();
@@ -117,22 +117,34 @@ namespace hpc {
             return lotus.pos() + sub * lotus.radius();
         } else {
             Vec2 goal;
-            if (targetLotusNo == 0 && loopNo == 1) {
-                // まだ一つも回ってないとき
-                // 初期位置、1個目、2個目で三角形を作る
-                Vec2 prevPoint = initialPlayerPosition; // 初期位置
-                Vec2 nextPoint = lotuses[1].pos(); // 1個目
-                const Lotus& target = lotuses[0];
-                goal = getTargetByThreePoints(target, prevPoint, nextPoint);
-            } else {
-                // それ以外の時
-                Vec2 prevPoint = lotuses[(targetLotusNo - 1 + lotusCount) % lotusCount].pos(); // 1つ前
-                Vec2 nextPoint = lotuses[(targetLotusNo + 1) % lotusCount].pos(); // 1つ後
-                const Lotus& target = lotuses[targetLotusNo];
-                goal = getTargetByThreePoints(target, prevPoint, nextPoint);
-            }
-            Vec2 stream = field.flowVel();
             
+            // それ以外の時
+            // 1つ先のゴールを出す
+            Vec2 prevPoint;
+            if (roundNo == 0 && targetLotusNo == 0) {
+                prevPoint = initialPlayerPosition;
+            } else {
+                prevPoint = lotuses[(targetLotusNo - 1 + lotusCount) % lotusCount].pos();
+            }
+            const Lotus& target = lotuses[targetLotusNo];
+            const Lotus& target2 = lotuses[(targetLotusNo + 1) % lotusCount];
+            Vec2 goalA0 = getTargetByThreePoints(target, prevPoint, target2.pos());
+            Vec2 goalB0 = getTargetByTwoPoints(target, target2.pos());
+            
+            // 2つ先のゴールを出す
+            Vec2 nextPoint2 =lotuses[(targetLotusNo + 2) % lotusCount].pos(); // 2つあと
+            Vec2 goalA1 = getTargetByThreePoints(target2, target.pos(), nextPoint2);
+            Vec2 goalB1 = getTargetByTwoPoints(target2, nextPoint2);
+            if ((goalA0 + goalA1).squareLength() < (goalB0 + goalB1).squareLength()) {
+                // Aルートの方が近い
+                goal = goalA0;
+            } else {
+                // Bルートの方が近い
+            }
+                goal = goalB0;
+            
+            
+            Vec2 stream = field.flowVel();
             goal -= stream * t;
             return goal;
         }
@@ -176,13 +188,13 @@ namespace hpc {
         float lastDistance = (lotuses[lotuses.count() - 1].pos() - lotuses[0].pos()).length();
         
         /*current = firstTarget;
-        for (int i = 0; i < lotusesCount; ++i) {
-            const Lotus& lotus = lotuses[i];
-            const Lotus& next = lotuses[(i + 1) % lotuses.count()];
-            distance += (next.pos() - lotus.pos()).length();
-        }
-        // 総距離の算出
-        distance = distance * 3 + initialDistance;*/
+         for (int i = 0; i < lotusesCount; ++i) {
+         const Lotus& lotus = lotuses[i];
+         const Lotus& next = lotuses[(i + 1) % lotuses.count()];
+         distance += (next.pos() - lotus.pos()).length();
+         }
+         // 総距離の算出
+         distance = distance * 3 + initialDistance;*/
         
         for (int i = 0; i < lotusesCount; ++i) {
             const Lotus& lotus = lotuses[i];
@@ -270,7 +282,7 @@ namespace hpc {
         int maxLotusCount = lotuses.count();
         
         // 最低限残しておくアクセル回数
-        int saveAccelThreshold = 2;
+        int saveAccelThreshold = 3;
         if (player.passedLotusCount() > maxLotusCount - 1) {
             // 最後の方は自重しなくする
             saveAccelThreshold = 1;
@@ -327,9 +339,7 @@ namespace hpc {
             if (player.accelCount() > 0) {
                 if (sTimer > 0) sTimer = 0;
                 changedTarget = false;
-                if ( !isReachInCurrentAccel(player, goal) ) {
-                    return Action::Accel(goal);
-                }
+                return Action::Accel(goal);
             }
         } else {
             ++sTimer;
