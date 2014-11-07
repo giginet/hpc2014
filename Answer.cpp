@@ -39,8 +39,11 @@ namespace {
     /// 予想最低速度
     float _minSpeed = 0;
     
+    int _lastTargetLotusNo = -1;
+    
     /// 最後にアクセルを踏んだ地点
     Vec2 _lastAccelPos;
+    float _lastAccelTurn;
     
     /// 過去の移動履歴
     Vec2 _positionHistory[Parameter::GameTurnPerStage];
@@ -221,10 +224,10 @@ namespace hpc {
     /// GetNextActionをダミープレイヤーでシミュレーションする
     Action simulateGetNextAction(DummyPlayer dplayer, float minSpeed)
     {
-        // 最低限残しておくアクセル回数
+        // 普段はアクセル節約しておく
         bool saveAccel = true;
         if (dplayer.targetLotusNo >= _lotuses.count() - 1 && dplayer.roundCount == 2) {
-            // 最後の方は自重しなくする
+            // 最終コーナーならアクセル節約フラグをオフ
             saveAccel = false;
         }
         
@@ -251,7 +254,15 @@ namespace hpc {
             Vec2 futurePoint = posCurrentAccel(dplayer);
             float futureDistance = (goal - futurePoint).squareLength();
             if (currentDitance < futureDistance) {
-                doAccel = true;
+                // 前回と目的地が変わってたら無条件に踏む
+                if (_lastTargetLotusNo != dplayer.targetLotusNo) {
+                    doAccel = true;
+                } else {
+                    // そうじゃなかったら、前回から5ターン以上経過してなかったら勿体ないから踏まない
+                    if (_lastAccelTurn + 5 <=  dplayer.passedTurn) {
+                        doAccel = true;
+                    }
+                }
             }
         }
         
@@ -261,6 +272,8 @@ namespace hpc {
             if (dplayer.accelCount > 0) {
                 // アクセルを節約しているとき、これ以上加速しなくてもたどり着けそうなら勿体ないから加速しない
                 if (!saveAccel || !isEnableReachInCurrentAccel(dplayer, targetLotus.pos(), targetLotus.radius())) {
+                    _lastAccelTurn = dplayer.passedTurn;
+                    _lastAccelPos = dplayer.pos;
                     return Action::Accel(goal);
                 }
             }
@@ -360,6 +373,11 @@ namespace hpc {
         //std::cout << "StageNO: " <<  _stageNo << std::endl;
         //std::cout << "minSpeed: " << minSpeed << std::endl;
         //std::cout << "estimateTurn " << minPassedTurn << std::endl;
+        
+        // シミュレーション後にグローバル変数を元に戻す
+        _lastAccelTurn = 0;
+        _lastTargetLotusNo = -1;
+        _lastAccelPos = Vec2();
         
         // 最後に通ったハス
         ++_stageNo;
