@@ -21,8 +21,6 @@ namespace {
     Vec2 initialPlayerPosition;
     
     float wholeDistance = 0;
-    float accelPerTurn = 0;
-    
     float minSpeed = 0;
     
     // 最後にアクセルを踏んだ地点
@@ -30,11 +28,6 @@ namespace {
     
     // 過去の移動履歴
     Vec2 positionHistory[Parameter::GameTurnPerStage];
-    
-    // デバッグ用（あとで消す）
-    int stageNo = 0;
-    float realDistance = 0;
-    
 }
 
 /// プロコン問題環境を表します。
@@ -98,7 +91,7 @@ namespace hpc {
             const Lotus& lotus = lotuses[targetLotusNo];
             Vec2 sub = player.pos() - lotus.pos();
             sub.normalize();
-            return lotus.pos() + sub * lotus.radius();
+            return lotus.pos() + sub * (lotus.radius() + Parameter::CharaRadius());
         } else {
             Vec2 goal;
             
@@ -225,11 +218,9 @@ namespace hpc {
     /// @param[in] aStageAccessor 現在のステージ。
     void Answer::Init(const StageAccessor& aStageAccessor)
     {
-        realDistance = 0;
         changedTarget = false;
         
         wholeDistance = 0;
-        accelPerTurn = 0;
         
         const Chara& player = aStageAccessor.player();
         const LotusCollection& lotuses = aStageAccessor.lotuses();
@@ -259,7 +250,6 @@ namespace hpc {
         
         // 最後に通ったハス
         lastTargetLotusNo = player.targetLotusNo();
-        ++stageNo;
     }
     
     //------------------------------------------------------------------------------
@@ -297,22 +287,12 @@ namespace hpc {
         }
         
         // 前回と目的地が変わってたら
-        if (lastTargetLotusNo != player.targetLotusNo()) {
-            if (vel.length() <= minSpeed) {
-                // そもそも速度が規定値以下なら踏む
-                doAccel = true;
-            } else {
-                // アクセルを踏まずに将来的に移動しそうな点と目的地の距離 VS 今いる地点と目的地の距離を
-                // 比べて、将来的に移動しそうな点の方が近ければ、少なくとも目的地の方向に動いているっぽいのでアクセルを踏まない
-                float currentDitance = sub.squareLength();
-                Vec2 futurePoint = posCurrentAccel(aStageAccessor);
-                float futureDistance = (goal - futurePoint).squareLength();
-                if (currentDitance < futureDistance) {
-                    // 踏まないと遠ざかるようだったら踏む
-                    doAccel = true;
-                }
-            }
+        if (lastTargetLotusNo != player.targetLotusNo() && vel.length() <= minSpeed) {
+            // そもそも速度が規定値以下なら踏む
+            doAccel = true;
         } else {
+            // アクセルを踏まずに将来的に移動しそうな点と目的地の距離 VS 今いる地点と目的地の距離を
+            // 比べて、将来的に移動しそうな点の方が近ければ、少なくとも目的地の方向に動いているっぽいのでアクセルを踏まない
             float currentDitance = sub.squareLength();
             Vec2 futurePoint = posCurrentAccel(aStageAccessor);
             float futureDistance = (goal - futurePoint).squareLength();
