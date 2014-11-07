@@ -12,7 +12,6 @@
 // Answer.cpp 専用のインクルードファイルです。
 // 別のファイルをインクルードした場合、評価時には削除されます。
 #include "HPCAnswerInclude.hpp"
-#include <iostream>
 
 namespace {
     
@@ -48,10 +47,6 @@ namespace {
     
     /// 過去の移動履歴
     Vec2 _positionHistory[Parameter::GameTurnPerStage];
-    
-    
-    /// デバッグ用
-    int _stageNo = 0;
 }
 
 /// プロコン問題環境を表します。
@@ -214,14 +209,18 @@ namespace hpc {
         Vec2 vel = dplayer.vel + _field.flowVel();
         const Lotus& targetLotus = _lotuses[dplayer.targetLotusNo];
         
-        // 前回と目的地が変わってたら
-        if (vel.length() <= minSpeed && dplayer.accelCount >= 2) {
-            // そもそも速度が規定値以下なら踏む
-            doAccel = true;
+        // 規定速度以下の時
+        if (vel.length() <= minSpeed) {
+            if (_lastTargetLotusNo != dplayer.targetLotusNo) {
+                // 前回と目的地が変わってたら無条件で踏む
+                doAccel = true;
+            } else {
+                // そうじゃなかったらカウントが2以上あったときだけ踏む
+                doAccel = dplayer.accelCount >= 2;
+            }
         } else {
             // アクセルを踏まずに将来的に移動しそうな点と目的地の距離 VS 今いる地点と目的地の距離を
             // 比べて、将来的に移動しそうな点の方が近ければ、少なくとも目的地の方向に動いているっぽいのでアクセルを踏まない
-            // 最後にアクセルを踏んでから3ターン経過してなければ勿体ないから踏まない
             float currentDitance = sub.squareLength();
             Vec2 futurePoint = posCurrentAccel(dplayer);
             float futureDistance = (goal - futurePoint).squareLength();
@@ -236,6 +235,7 @@ namespace hpc {
         if (doAccel) {
             if (dplayer.accelCount > 0) {
                 // アクセルを節約しているとき、これ以上加速しなくてもたどり着けそうなら勿体ないから加速しない
+                // 最終コーナーでは自重せずに踏み抜く
                 if (!saveAccel || !isEnableReachInCurrentAccel(dplayer, targetLotus.pos(), targetLotus.radius())) {
                     _lastAccelTurn = dplayer.passedTurn;
                     _lastAccelPos = dplayer.pos;
@@ -341,18 +341,11 @@ namespace hpc {
         }
         _minSpeed = minSpeed;
         
-        /*
-std::cout << "StageNO: " <<  _stageNo << std::endl;
-        std::cout << "minSpeed: " << minSpeed << std::endl;
-        std::cout << "estimateTurn " << minPassedTurn << std::endl;*/
-        
         // シミュレーション後にグローバル変数を元に戻す
         _lastAccelTurn = 0;
         _lastTargetLotusNo = -1;
         _lastAccelPos = Vec2();
         
-        // 最後に通ったハス
-        ++_stageNo;
     }
     
     //------------------------------------------------------------------------------
