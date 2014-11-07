@@ -224,10 +224,10 @@ namespace hpc {
     /// GetNextActionをダミープレイヤーでシミュレーションする
     Action simulateGetNextAction(DummyPlayer dplayer, float minSpeed)
     {
-        // 普段はアクセル節約しておく
+        // 最低限残しておくアクセル回数
         bool saveAccel = true;
         if (dplayer.targetLotusNo >= _lotuses.count() - 1 && dplayer.roundCount == 2) {
-            // 最終コーナーならアクセル節約フラグをオフ
+            // 最後の方は自重しなくする
             saveAccel = false;
         }
         
@@ -250,22 +250,16 @@ namespace hpc {
         } else {
             // アクセルを踏まずに将来的に移動しそうな点と目的地の距離 VS 今いる地点と目的地の距離を
             // 比べて、将来的に移動しそうな点の方が近ければ、少なくとも目的地の方向に動いているっぽいのでアクセルを踏まない
+            // 最後にアクセルを踏んでから3ターン経過してなければ勿体ないから踏まない
             float currentDitance = sub.squareLength();
             Vec2 futurePoint = posCurrentAccel(dplayer);
             float futureDistance = (goal - futurePoint).squareLength();
             if (currentDitance < futureDistance) {
-                // 前回と目的地が変わってたら無条件に踏む
-                if (_lastTargetLotusNo != dplayer.targetLotusNo) {
-                    doAccel = true;
-                } else {
-                    // そうじゃなかったら、前回から5ターン以上経過してなかったら勿体ないから踏まない
-                    if (_lastAccelTurn + 5 <=  dplayer.passedTurn) {
-                        doAccel = true;
-                    }
-                }
+                doAccel = true;
             }
         }
         
+        _lastTargetLotusNo = dplayer.targetLotusNo;
         _positionHistory[dplayer.passedTurn] = dplayer.pos;
         
         if (doAccel) {
