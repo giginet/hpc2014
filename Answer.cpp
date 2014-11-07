@@ -91,7 +91,7 @@ namespace hpc {
             const Lotus& lotus = lotuses[targetLotusNo];
             Vec2 sub = player.pos() - lotus.pos();
             sub.normalize();
-            return lotus.pos() + sub * (lotus.radius() + Parameter::CharaRadius());
+            return lotus.pos() + sub * lotus.radius();
         } else {
             Vec2 goal;
             
