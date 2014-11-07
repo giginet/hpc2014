@@ -40,17 +40,6 @@ namespace {
 /// プロコン問題環境を表します。
 namespace hpc {
     
-    // 加速してからtターン後の位置を返します
-    float distanceAfterTurn(float t, const StageAccessor& aStageAccessor)
-    {
-        float v0 = Parameter::CharaAccelSpeed();
-        float a = -Parameter::CharaDecelSpeed();
-        if (t >= v0 / -a) {
-            t = v0 / -a;
-        }
-        return v0 * t + 0.5 * a * t * t;
-    }
-    
     /// ハスa, b, cを通るときに、一番いい感じでbに接触できるような点を返します
     Vec2 getTargetByThreePoints(const Lotus& target, Vec2 prevPoint, Vec2 nextPoint)
     {
@@ -62,7 +51,7 @@ namespace hpc {
         
         ac.normalize();
         
-        ac *= target.radius() * 0.9;
+        ac *= target.radius() * 0.8;
         
         // 逆バージョンも作る
         Vec2 reversed = ac * -1;
@@ -117,8 +106,10 @@ namespace hpc {
             // 1つ先のゴールを出す
             Vec2 prevPoint;
             if (roundNo == 0 && targetLotusNo == 0) {
+                // まだ1つも通ってないとき、最初の点を使う
                 prevPoint = initialPlayerPosition;
             } else {
+                // それ以外の時、1個前の点を使う
                 prevPoint = lotuses[(targetLotusNo - 1 + lotusCount) % lotusCount].pos();
             }
             const Lotus& target = lotuses[targetLotusNo];
@@ -146,25 +137,49 @@ namespace hpc {
         
     }
     
-    // 今のアクセルで到達可能な地点
-    Vec2 canReachCurrentAccelPos(const Chara& player) {
-        float v0 = player.vel().length();
-        float a = Parameter::CharaDecelSpeed();
-        float length = (-(v0* v0) / (2 * a));
-        Vec2 normalized = player.vel();
-        normalized.normalize();
+    // nターン後の位置を返す
+    Vec2 posAfterTurn(const StageAccessor& stageAccessor, int afterTurn) {
+        const Chara& player = stageAccessor.player();
+        const Field& field = stageAccessor.field();
+        float stopTurn = player.vel().length() / Parameter::CharaDecelSpeed();
+        if (afterTurn > stopTurn)
+        {
+            afterTurn = stopTurn;
+        }
+        float a = -Parameter::CharaDecelSpeed();
+        Vec2 currentVel = player.vel();
         Vec2 currentPos = player.pos();
-        return currentPos + normalized * length;
+        for (int passedTurn = 1; passedTurn <= afterTurn; ++passedTurn) {
+            currentPos = currentPos + currentVel + field.flowVel();
+            float currentSpeed = player.vel().length();
+            currentVel.normalize();
+            currentSpeed += a;
+            currentVel *= currentSpeed;
+        }
+        return currentPos;
+    }
+    
+    Vec2 posCurrentAccel(const StageAccessor& stageAccessor) {
+        const Chara& player = stageAccessor.player();
+        float stopTurn = player.vel().length() / Parameter::CharaDecelSpeed();
+        return posAfterTurn(stageAccessor, stopTurn);
     }
     
     // targetに現在のアクセルだけで到達可能かどうか
-    bool isReachInCurrentAccel(const Chara& player, Vec2 target)
+    bool isEnableReachInCurrentAccel(const StageAccessor& stageAccessor, Vec2 target, float radius)
     {
-        if ( (player.pos() - target).squareLength() < Parameter::CharaRadius() ) {
-            return true;
+        const Chara& player = stageAccessor.player();
+        // 何ターン後に止まるか
+        float stopTurn = player.vel().length() / Parameter::CharaDecelSpeed();
+        // 1ターンずつシミュレーションする
+        for (int passedTurn = 1; passedTurn <= stopTurn; ++passedTurn) {
+            Vec2 futurePos = posAfterTurn(stageAccessor, passedTurn);
+            float futureDistance = (futurePos - target).length();
+            if (futureDistance <= (Parameter::CharaRadius() + radius)) {
+                return true;
+            }
         }
-        Vec2 goal = canReachCurrentAccelPos(player);
-        return (goal - target).squareLength() <= Parameter::CharaRadius();
+        return false;
     }
     
     // 単純にハスの間の総距離を足して、全体の総距離を概算する
@@ -202,19 +217,6 @@ namespace hpc {
         return distance;
     }
     
-    // 渡されたターン数連続で指定座標まで遠ざかっていればtrueを返します
-    bool isFartherPastTurn(int turn, int currentTurn, Vec2 targetPos)
-    {
-        for (int i = turn; i > 1; --i) {
-            Vec2 prevPos = positionHistory[currentTurn - i - 1];
-            Vec2 currentPos = positionHistory[currentTurn - i];
-            if ((targetPos - prevPos).squareLength() < (targetPos - currentPos).squareLength()) {
-                return false;
-            }
-        }
-        return true;
-    }
-    
     //------------------------------------------------------------------------------
     /// 各ステージ開始時に呼び出されます。
     ///
@@ -240,12 +242,12 @@ namespace hpc {
         float stopTime = v0 / -a;
         float waitTurn = player.accelWaitTurn();
         
-        // 平均速度を算出する
+        // 予想最低速度を算出する
         int lotusCount = lotuses.count();
         float wd = calcWholeDistance(aStageAccessor);
         for (float apt = 1; apt < stopTime; ++apt) {
-            // 予想ターン数
             float speed = v0 + a * (apt - 1);
+            // 予想ターン数
             float estimateTurn = wd / speed;
             int accelCount = (estimateTurn / waitTurn) + player.accelCount();
             int requiredAccel = (estimateTurn / apt) + (lotusCount * 3 - 1);
@@ -287,22 +289,34 @@ namespace hpc {
         Vec2 goal = getNextTarget(aStageAccessor);
         Vec2 sub = goal - player.pos();
         Vec2 vel = player.vel() + aStageAccessor.field().flowVel();
+        const Lotus& targetLotus = lotuses[player.targetLotusNo()];
+        
         float diffAngle = 0;
         if (vel.squareLength() > 0) {
             diffAngle = Math::Abs(Math::RadToDeg(vel.angle(sub)));
         }
         
-        // 前回と目的地が変わってたらアクセル踏み直す
+        // 前回と目的地が変わってたら
         if (lastTargetLotusNo != player.targetLotusNo()) {
-            doAccel = true;
-            changedTarget = true;
-        } else if (vel.length() < minSpeed && player.accelCount() >= saveAccelThreshold && player.passedTurn() >= 3) {
-            // 過去3ターンの履歴を見て、徐々に遠ざかってたら再アクセルを踏む
-            float currentDistance = (goal - player.pos()).squareLength();
-            float prevDistance = (goal - positionHistory[player.passedTurn() - 1]).squareLength();
-            float prevDistance2 = (goal - positionHistory[player.passedTurn() - 2]).squareLength();
-            float prevDistance3 = (goal - positionHistory[player.passedTurn() - 3]).squareLength();
-            if (currentDistance > prevDistance && prevDistance > prevDistance2 && prevDistance2 > prevDistance3) {
+            if (vel.length() <= minSpeed) {
+                // そもそも速度が規定値以下なら踏む
+                doAccel = true;
+            } else {
+                // アクセルを踏まずに将来的に移動しそうな点と目的地の距離 VS 今いる地点と目的地の距離を
+                // 比べて、将来的に移動しそうな点の方が近ければ、少なくとも目的地の方向に動いているっぽいのでアクセルを踏まない
+                float currentDitance = sub.squareLength();
+                Vec2 futurePoint = posCurrentAccel(aStageAccessor);
+                float futureDistance = (goal - futurePoint).squareLength();
+                if (currentDitance < futureDistance) {
+                    // 踏まないと遠ざかるようだったら踏む
+                    doAccel = true;
+                }
+            }
+        } else {
+            float currentDitance = sub.squareLength();
+            Vec2 futurePoint = posCurrentAccel(aStageAccessor);
+            float futureDistance = (goal - futurePoint).squareLength();
+            if (currentDitance < futureDistance) {
                 doAccel = true;
             }
         }
@@ -311,14 +325,7 @@ namespace hpc {
         
         // 予想最低速度を下回ってたらアクセルを踏む
         if (vel.length() < minSpeed) {
-            float stopTurn = player.vel().length() / Parameter::CharaDecelSpeed();
-            float v0 = player.vel().length();
-            float a = -Parameter::CharaDecelSpeed();
-            float length = v0 * stopTurn + 0.5 * a * stopTurn * stopTurn;
-            // これ以上加速しなくてもたどり着けそうなら勿体ないから加速しない
-            if (sub.length() >= (length + Parameter::CharaRadius())) {
-                doAccel = true;
-            }
+            doAccel = true;
         }
         
         if (changedTarget) {
@@ -329,8 +336,11 @@ namespace hpc {
         lastTargetLotusNo = player.targetLotusNo();
         if (doAccel) {
             if (player.accelCount() > 0) {
-                changedTarget = false;
-                return Action::Accel(goal);
+                // これ以上加速しなくてもたどり着けそうなら勿体ないから加速しない
+                if (!isEnableReachInCurrentAccel(aStageAccessor, targetLotus.pos(), targetLotus.radius())) {
+                    changedTarget = false;
+                    return Action::Accel(goal);
+                }
             }
         }
         return Action::Wait();
