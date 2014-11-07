@@ -32,6 +32,7 @@ namespace {
     bool _changedTarget = false;
     Vec2 _initialPlayerPosition;
     Field _field;
+    LotusCollection _lotuses;
     
     float _minSpeed = 0;
     
@@ -111,22 +112,20 @@ namespace hpc {
     }
     
     // 次の目的地を返します
-    Vec2 getNextTarget(const StageAccessor& aStageAccessor)
+    Vec2 getNextTarget(DummyPlayer player)
     {
         const float v0 = Parameter::CharaAccelSpeed();
         const float d = -Parameter::CharaDecelSpeed();
         float t = -(v0 / d);
-        const Chara& player = aStageAccessor.player();
-        const LotusCollection& lotuses = aStageAccessor.lotuses();
-        int lotusCount = lotuses.count();
+        int lotusCount = _lotuses.count();
         
-        int targetLotusNo = player.targetLotusNo();
-        int roundNo = player.roundCount();
+        int targetLotusNo = player.targetLotusNo;
+        int roundNo = player.roundCount;
         // もし、targetが最後ハスだったら
         if (roundNo == 2 && targetLotusNo == lotusCount - 1)
         {
-            const Lotus& lotus = lotuses[targetLotusNo];
-            Vec2 sub = player.pos() - lotus.pos();
+            const Lotus& lotus = _lotuses[targetLotusNo];
+            Vec2 sub = player.pos - lotus.pos();
             sub.normalize();
             return lotus.pos() + sub * lotus.radius();
         } else {
@@ -140,15 +139,15 @@ namespace hpc {
                 prevPoint = _initialPlayerPosition;
             } else {
                 // それ以外の時、1個前の点を使う
-                prevPoint = lotuses[(targetLotusNo - 1 + lotusCount) % lotusCount].pos();
+                prevPoint = _lotuses[(targetLotusNo - 1 + lotusCount) % lotusCount].pos();
             }
-            const Lotus& target = lotuses[targetLotusNo];
-            const Lotus& target2 = lotuses[(targetLotusNo + 1) % lotusCount];
+            const Lotus& target = _lotuses[targetLotusNo];
+            const Lotus& target2 = _lotuses[(targetLotusNo + 1) % lotusCount];
             Vec2 goalA0 = getTargetByThreePoints(target, prevPoint, target2.pos());
             Vec2 goalB0 = getTargetByTwoPoints(target, target2.pos());
             
             // 2つ先のゴールを出す
-            Vec2 nextPoint2 =lotuses[(targetLotusNo + 2) % lotusCount].pos(); // 2つあと
+            Vec2 nextPoint2 =_lotuses[(targetLotusNo + 2) % lotusCount].pos(); // 2つあと
             Vec2 goalA1 = getTargetByThreePoints(target2, target.pos(), nextPoint2);
             Vec2 goalB1 = getTargetByTwoPoints(target2, nextPoint2);
             if ((goalA0 + goalA1).squareLength() < (goalB0 + goalB1).squareLength()) {
@@ -168,20 +167,18 @@ namespace hpc {
     }
     
     // nターン後の位置を返す
-    Vec2 posAfterTurn(const StageAccessor& stageAccessor, int afterTurn) {
-        const Chara& player = stageAccessor.player();
-        _field = stageAccessor.field();
-        float stopTurn = player.vel().length() / Parameter::CharaDecelSpeed();
+    Vec2 posAfterTurn(DummyPlayer dplayer, int afterTurn) {
+        float stopTurn = dplayer.vel.length() / Parameter::CharaDecelSpeed();
         if (afterTurn > stopTurn)
         {
             afterTurn = stopTurn;
         }
         float a = -Parameter::CharaDecelSpeed();
-        Vec2 currentVel = player.vel();
-        Vec2 currentPos = player.pos();
+        Vec2 currentVel = dplayer.vel;
+        Vec2 currentPos = dplayer.pos;
         for (int passedTurn = 1; passedTurn <= afterTurn; ++passedTurn) {
             currentPos = currentPos + currentVel + _field.flowVel();
-            float currentSpeed = player.vel().length();
+            float currentSpeed = dplayer.vel.length();
             currentVel.normalize();
             currentSpeed += a;
             currentVel *= currentSpeed;
@@ -189,21 +186,19 @@ namespace hpc {
         return currentPos;
     }
     
-    Vec2 posCurrentAccel(const StageAccessor& stageAccessor) {
-        const Chara& player = stageAccessor.player();
-        float stopTurn = player.vel().length() / Parameter::CharaDecelSpeed();
-        return posAfterTurn(stageAccessor, stopTurn);
+    Vec2 posCurrentAccel(DummyPlayer dplayer) {
+        float stopTurn = dplayer.vel.length() / Parameter::CharaDecelSpeed();
+        return posAfterTurn(dplayer, stopTurn);
     }
     
     // targetに現在のアクセルだけで到達可能かどうか
-    bool isEnableReachInCurrentAccel(const StageAccessor& stageAccessor, Vec2 target, float radius)
+    bool isEnableReachInCurrentAccel(DummyPlayer dplayer, Vec2 target, float radius)
     {
-        const Chara& player = stageAccessor.player();
         // 何ターン後に止まるか
-        float stopTurn = player.vel().length() / Parameter::CharaDecelSpeed();
+        float stopTurn = dplayer.vel.length() / Parameter::CharaDecelSpeed();
         // 1ターンずつシミュレーションする
         for (int passedTurn = 1; passedTurn <= stopTurn; ++passedTurn) {
-            Vec2 futurePos = posAfterTurn(stageAccessor, passedTurn);
+            Vec2 futurePos = posAfterTurn(dplayer, passedTurn);
             float futureDistance = (futurePos - target).length();
             if (futureDistance <= (Parameter::CharaRadius() + radius)) {
                 return true;
@@ -257,10 +252,11 @@ namespace hpc {
     {
         _changedTarget = false;
         const Chara& player = aStageAccessor.player();
-        const LotusCollection& lotuses = aStageAccessor.lotuses();
         _initialPlayerPosition = player.pos();
         _positionHistory[0] = player.pos();
-        
+        // fieldとlotusesは変更され得ないので、最初にコピーしてグローバルにアクセスできるようにしている
+        _field = aStageAccessor.field();
+        _lotuses = aStageAccessor.lotuses();
         
         float v0 = Parameter::CharaAccelSpeed();
         float a = -1 * Parameter::CharaDecelSpeed();
@@ -268,7 +264,7 @@ namespace hpc {
         float waitTurn = player.accelWaitTurn();
         
         // 予想最低速度を算出する
-        int lotusCount = lotuses.count();
+        int lotusCount = _lotuses.count();
         float wd = calcWholeDistance(aStageAccessor);
         for (float apt = 1; apt < stopTime; ++apt) {
             float speed = v0 + a * (apt - 1);
@@ -308,9 +304,9 @@ namespace hpc {
         }
         
         bool doAccel = false;
-        // if (ac > 0) {
         
-        Vec2 goal = getNextTarget(aStageAccessor);
+        DummyPlayer dplayer = createDummyPlayer(player);
+        Vec2 goal = getNextTarget(dplayer);
         Vec2 sub = goal - player.pos();
         Vec2 vel = player.vel() + aStageAccessor.field().flowVel();
         const Lotus& targetLotus = lotuses[player.targetLotusNo()];
@@ -328,7 +324,7 @@ namespace hpc {
             // アクセルを踏まずに将来的に移動しそうな点と目的地の距離 VS 今いる地点と目的地の距離を
             // 比べて、将来的に移動しそうな点の方が近ければ、少なくとも目的地の方向に動いているっぽいのでアクセルを踏まない
             float currentDitance = sub.squareLength();
-            Vec2 futurePoint = posCurrentAccel(aStageAccessor);
+            Vec2 futurePoint = posCurrentAccel(dplayer);
             float futureDistance = (goal - futurePoint).squareLength();
             if (currentDitance < futureDistance) {
                 doAccel = true;
@@ -351,7 +347,7 @@ namespace hpc {
         if (doAccel) {
             if (player.accelCount() > 0) {
                 // これ以上加速しなくてもたどり着けそうなら勿体ないから加速しない
-                if (!isEnableReachInCurrentAccel(aStageAccessor, targetLotus.pos(), targetLotus.radius())) {
+                if (!isEnableReachInCurrentAccel(dplayer, targetLotus.pos(), targetLotus.radius())) {
                     _changedTarget = false;
                     return Action::Accel(goal);
                 }
