@@ -30,10 +30,6 @@ namespace {
         Vec2 pos;
         Vec2 vel;
     };
-    /// 最後に目指していたハス
-    int _lastTargetLotusNo = 0;
-    /// 目指していたハスが変わって、そのあとにまだ加速してないフラグ
-    bool _changedTarget = false;
     /// プレイヤーの初期位置
     Vec2 _initialPlayerPosition;
     /// フィールド（グローバルにアクセスできるようにしている）
@@ -96,9 +92,7 @@ namespace hpc {
         // acベクトルを90度回転する
         ac.rotate(Math::DegToRad(90));
         
-        ac.normalize();
-        
-        ac *= target.radius() * 0.8;
+        ac.normalize(target.radius() * 0.75);
         
         // 逆バージョンも作る
         Vec2 reversed = ac * -1;
@@ -120,9 +114,9 @@ namespace hpc {
     {
         // abベクトルを生成
         Vec2 ab = nextPoint - target.pos();
-        ab.normalize();
+        ab.normalize(target.radius() * 0.75);
         
-        Vec2 goal = target.pos() + ab * target.radius();
+        Vec2 goal = target.pos() + ab;
         return goal;
     }
     
@@ -141,8 +135,8 @@ namespace hpc {
         {
             const Lotus& lotus = _lotuses[targetLotusNo];
             Vec2 sub = player.pos - lotus.pos();
-            sub.normalize();
-            return lotus.pos() + sub * lotus.radius();
+            sub.normalize(lotus.radius() * 0.75);
+            return lotus.pos() + sub;
         } else {
             Vec2 goal;
             
@@ -227,11 +221,9 @@ namespace hpc {
     /// GetNextActionをダミープレイヤーでシミュレーションする
     Action simulateGetNextAction(DummyPlayer dplayer, float minSpeed)
     {
-        int maxLotusCount = _lotuses.count() * 3;
-        
         // 最低限残しておくアクセル回数
         bool saveAccel = true;
-        if (dplayer.passedLotusCount >= maxLotusCount - 1) {
+        if (dplayer.targetLotusNo >= _lotuses.count() - 1 && dplayer.roundCount == 2) {
             // 最後の方は自重しなくする
             saveAccel = false;
         }
@@ -265,12 +257,10 @@ namespace hpc {
         
         _positionHistory[dplayer.passedTurn] = dplayer.pos;
         
-        _lastTargetLotusNo = dplayer.targetLotusNo;
         if (doAccel) {
             if (dplayer.accelCount > 0) {
                 // アクセルを節約しているとき、これ以上加速しなくてもたどり着けそうなら勿体ないから加速しない
                 if (!saveAccel || !isEnableReachInCurrentAccel(dplayer, targetLotus.pos(), targetLotus.radius())) {
-                    _changedTarget = false;
                     return Action::Accel(goal);
                 }
             }
@@ -286,7 +276,6 @@ namespace hpc {
     /// @param[in] aStageAccessor 現在のステージ。
     void Answer::Init(const StageAccessor& aStageAccessor)
     {
-        _changedTarget = false;
         const Chara& player = aStageAccessor.player();
         _initialPlayerPosition = player.pos();
         _positionHistory[0] = player.pos();
@@ -303,8 +292,8 @@ namespace hpc {
             // めっちゃリアルっぽいシミュレーションする
             DummyPlayer dummyPlayer = createDummyPlayer(player);
             // ゴールするまでリアルシミュレーション
-            // 経験上、2000ターンは超えない気がするから2000まで
-            for (int passedTurn = 0; passedTurn <= 2000; ++passedTurn) {
+            // 経験上、2500ターンは超えない気がするから2500まで
+            for (int passedTurn = 0; passedTurn <= 2500; ++passedTurn) {
                 const Lotus& targetLotus = _lotuses[dummyPlayer.targetLotusNo];
                 Action nextAction = simulateGetNextAction(dummyPlayer, speed);
                 if (nextAction.type() == ActionType_Accel && dummyPlayer.accelCount > 0) {
@@ -368,8 +357,11 @@ namespace hpc {
         }
         _minSpeed = minSpeed;
         
+        //std::cout << "StageNO: " <<  _stageNo << std::endl;
+        //std::cout << "minSpeed: " << minSpeed << std::endl;
+        //std::cout << "estimateTurn " << minPassedTurn << std::endl;
+        
         // 最後に通ったハス
-        _lastTargetLotusNo = -1;
         ++_stageNo;
     }
     
