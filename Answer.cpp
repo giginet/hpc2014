@@ -14,43 +14,49 @@
 #include "HPCAnswerInclude.hpp"
 
 namespace {
-
+    
     using namespace hpc;
     
     /// シミュレーション用のダミープレイヤーです
     struct DummyPlayer
     {
         int roundCount;
+        int passedTurn;
         int passedLotusCount;
         int accelCount;
         int targetLotusNo;
         Vec2 pos;
         Vec2 vel;
     };
-    
+    /// 最後に目指していたハス
     int _lastTargetLotusNo = 0;
+    /// 目指していたハスが変わって、そのあとにまだ加速してないフラグ
     bool _changedTarget = false;
+    /// プレイヤーの初期位置
     Vec2 _initialPlayerPosition;
+    /// フィールド（グローバルにアクセスできるようにしている）
     Field _field;
+    /// ハスのリスト（グローバルにアクセスできるようにしている）
     LotusCollection _lotuses;
-    
+    /// 予想最低速度
     float _minSpeed = 0;
     
-    // 最後にアクセルを踏んだ地点
+    /// 最後にアクセルを踏んだ地点
     Vec2 _lastAccelPos;
     
-    // 過去の移動履歴
+    /// 過去の移動履歴
     Vec2 _positionHistory[Parameter::GameTurnPerStage];
 }
 
 /// プロコン問題環境を表します。
 namespace hpc {
-
+    
     /// 新しいダミー用のプレイヤーを生成します
     DummyPlayer createDummyPlayer()
     {
         DummyPlayer dummy;
         dummy.roundCount = 0;
+        dummy.passedTurn = 0;
         dummy.passedLotusCount = 0;
         dummy.accelCount = 0;
         dummy.targetLotusNo = 0;
@@ -58,12 +64,13 @@ namespace hpc {
         dummy.vel = Vec2();
         return dummy;
     }
-
+    
     /// Charaクラスからダミー用のプレイヤーを生成します
     DummyPlayer createDummyPlayer(const Chara& player)
     {
         DummyPlayer dummy;
         dummy.roundCount = player.roundCount();
+        dummy.passedTurn = player.passedTurn();
         dummy.passedLotusCount = player.passedLotusCount();
         dummy.accelCount = player.accelCount();
         dummy.targetLotusNo = player.targetLotusNo();
@@ -100,7 +107,7 @@ namespace hpc {
         return target1;
     }
     
-    // ハスa, bを通るときに、一番いい感じでaに接触できるような点を返します
+    /// ハスa, bを通るときに、一番いい感じでaに接触できるような点を返します
     Vec2 getTargetByTwoPoints(const Lotus& target, Vec2 nextPoint)
     {
         // abベクトルを生成
@@ -111,7 +118,7 @@ namespace hpc {
         return goal;
     }
     
-    // 次の目的地を返します
+    /// 次の目的地を返します
     Vec2 getNextTarget(DummyPlayer player)
     {
         const float v0 = Parameter::CharaAccelSpeed();
@@ -166,7 +173,7 @@ namespace hpc {
         
     }
     
-    // nターン後の位置を返す
+    /// nターン後の位置を返す
     Vec2 posAfterTurn(DummyPlayer dplayer, int afterTurn) {
         float stopTurn = dplayer.vel.length() / Parameter::CharaDecelSpeed();
         if (afterTurn > stopTurn)
@@ -207,7 +214,7 @@ namespace hpc {
         return false;
     }
     
-    // 単純にハスの間の総距離を足して、全体の総距離を概算する
+    /// 単純にハスの間の総距離を足して、全体の総距離を概算する
     float calcWholeDistance(const StageAccessor& aStageAccessor)
     {
         float distance = 0;
@@ -282,34 +289,25 @@ namespace hpc {
         _lastTargetLotusNo = player.targetLotusNo();
     }
     
-    //------------------------------------------------------------------------------
-    /// 各ターンでの動作を返します。
-    ///
-    /// @param[in] aStageAccessor 現在ステージの情報。
-    ///
-    /// @return これから行う動作を表す Action クラス。
-    Action Answer::GetNextAction(const StageAccessor& aStageAccessor)
+    /// GetNextActionをダミープレイヤーでシミュレーションする
+    Action simulateGetNextAction(DummyPlayer dplayer)
     {
-        const Chara& player = aStageAccessor.player();
-        const LotusCollection& lotuses = aStageAccessor.lotuses();
-        //auto distance =
         // 進む距離
-        int maxLotusCount = lotuses.count();
+        int maxLotusCount = _lotuses.count();
         
         // 最低限残しておくアクセル回数
         int saveAccelThreshold = 5;
-        if (player.passedLotusCount() > maxLotusCount - 1) {
+        if (dplayer.passedLotusCount > maxLotusCount - 1) {
             // 最後の方は自重しなくする
             saveAccelThreshold = 1;
         }
         
         bool doAccel = false;
         
-        DummyPlayer dplayer = createDummyPlayer(player);
         Vec2 goal = getNextTarget(dplayer);
-        Vec2 sub = goal - player.pos();
-        Vec2 vel = player.vel() + aStageAccessor.field().flowVel();
-        const Lotus& targetLotus = lotuses[player.targetLotusNo()];
+        Vec2 sub = goal - dplayer.pos;
+        Vec2 vel = dplayer.vel + _field.flowVel();
+        const Lotus& targetLotus = _lotuses[dplayer.targetLotusNo];
         
         float diffAngle = 0;
         if (vel.squareLength() > 0) {
@@ -317,7 +315,7 @@ namespace hpc {
         }
         
         // 前回と目的地が変わってたら
-        if (_lastTargetLotusNo != player.targetLotusNo() && vel.length() <= _minSpeed) {
+        if (_lastTargetLotusNo != dplayer.targetLotusNo && vel.length() <= _minSpeed) {
             // そもそも速度が規定値以下なら踏む
             doAccel = true;
         } else {
@@ -331,7 +329,7 @@ namespace hpc {
             }
         }
         
-        _positionHistory[player.passedTurn()] = player.pos();
+        _positionHistory[dplayer.passedTurn] = dplayer.pos;
         
         // 予想最低速度を下回ってたらアクセルを踏む
         if (vel.length() < _minSpeed) {
@@ -343,9 +341,9 @@ namespace hpc {
             doAccel = true;
         }
         
-        _lastTargetLotusNo = player.targetLotusNo();
+        _lastTargetLotusNo = dplayer.targetLotusNo;
         if (doAccel) {
-            if (player.accelCount() > 0) {
+            if (dplayer.accelCount > 0) {
                 // これ以上加速しなくてもたどり着けそうなら勿体ないから加速しない
                 if (!isEnableReachInCurrentAccel(dplayer, targetLotus.pos(), targetLotus.radius())) {
                     _changedTarget = false;
@@ -354,6 +352,18 @@ namespace hpc {
             }
         }
         return Action::Wait();
+    }
+    
+    //------------------------------------------------------------------------------
+    /// 各ターンでの動作を返します。
+    ///
+    /// @param[in] aStageAccessor 現在ステージの情報。
+    ///
+    /// @return これから行う動作を表す Action クラス。
+    Action Answer::GetNextAction(const StageAccessor& aStageAccessor)
+    {
+        DummyPlayer dplayer = createDummyPlayer(aStageAccessor.player());
+        return simulateGetNextAction(dplayer);
     }
     
 }
