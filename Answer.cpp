@@ -142,35 +142,10 @@ namespace hpc {
             sub.normalize(lotus.radius() * 0.75);
             return lotus.pos() + sub;
         } else {
-            Vec2 goal;
-            
             // それ以外の時
-            // 1つ先のゴールを出す
-            Vec2 prevPoint;
-            if (roundNo == 0 && targetLotusNo == 0) {
-                // まだ1つも通ってないとき、最初の点を使う
-                prevPoint = _initialPlayerPosition;
-            } else {
-                // それ以外の時、1個前の点を使う
-                prevPoint = _lotuses[(targetLotusNo - 1 + lotusCount) % lotusCount].pos();
-            }
             const Lotus& target = _lotuses[targetLotusNo];
             const Lotus& target2 = _lotuses[(targetLotusNo + 1) % lotusCount];
-            Vec2 goalA0 = getTargetByThreePoints(target, prevPoint, target2.pos());
-            Vec2 goalB0 = getTargetByTwoPoints(target, target2.pos());
-            
-            // 2つ先のゴールを出す
-            Vec2 nextPoint2 =_lotuses[(targetLotusNo + 2) % lotusCount].pos(); // 2つあと
-            Vec2 goalA1 = getTargetByThreePoints(target2, target.pos(), nextPoint2);
-            Vec2 goalB1 = getTargetByTwoPoints(target2, nextPoint2);
-            if ((goalA0 + goalA1).squareLength() < (goalB0 + goalB1).squareLength()) {
-                // Aルートの方が近い
-                goal = goalA0;
-            } else {
-                // Bルートの方が近い
-                goal = goalB0;
-            }
-            
+            Vec2 goal = getTargetByTwoPoints(target, target2.pos());
             
             Vec2 stream = _field.flowVel();
             goal -= stream * t;
