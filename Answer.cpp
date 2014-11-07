@@ -209,15 +209,17 @@ namespace hpc {
     // targetに現在のアクセルだけで到達可能かどうか
     bool isEnableReachInCurrentAccel(DummyPlayer dplayer, Vec2 target, float radius)
     {
+        Vec2 prevPos = dplayer.pos;
         // 何ターン後に止まるか
         float stopTurn = dplayer.vel.length() / Parameter::CharaDecelSpeed();
+        float charaRadius = Parameter::CharaRadius();
         // 1ターンずつシミュレーションする
         for (int passedTurn = 1; passedTurn <= stopTurn; ++passedTurn) {
             Vec2 futurePos = posAfterTurn(dplayer, passedTurn);
-            float futureDistance = (futurePos - target).length();
-            if (futureDistance <= (Parameter::CharaRadius() + radius)) {
+            if (Collision::IsHit(Circle(target, radius), Circle(prevPos, charaRadius), futurePos)) {
                 return true;
             }
+            prevPos = futurePos;
         }
         return false;
     }
@@ -225,14 +227,13 @@ namespace hpc {
     /// GetNextActionをダミープレイヤーでシミュレーションする
     Action simulateGetNextAction(DummyPlayer dplayer, float minSpeed)
     {
-        // 進む距離
-        int maxLotusCount = _lotuses.count();
+        int maxLotusCount = _lotuses.count() * 3;
         
         // 最低限残しておくアクセル回数
-        int saveAccelThreshold = 5;
-        if (dplayer.passedLotusCount > maxLotusCount - 1) {
+        bool saveAccel = true;
+        if (dplayer.passedLotusCount >= maxLotusCount - 1) {
             // 最後の方は自重しなくする
-            saveAccelThreshold = 1;
+            saveAccel = false;
         }
         
         bool doAccel = false;
@@ -248,7 +249,7 @@ namespace hpc {
         }
         
         // 前回と目的地が変わってたら
-        if (_lastTargetLotusNo != dplayer.targetLotusNo && vel.length() <= minSpeed) {
+        if (vel.length() <= minSpeed) {
             // そもそも速度が規定値以下なら踏む
             doAccel = true;
         } else {
@@ -264,21 +265,11 @@ namespace hpc {
         
         _positionHistory[dplayer.passedTurn] = dplayer.pos;
         
-        // 予想最低速度を下回ってたらアクセルを踏む
-        if (vel.length() < minSpeed) {
-            doAccel = true;
-        }
-        
-        if (_changedTarget) {
-            // ターゲットが変わってたらdoaccel
-            doAccel = true;
-        }
-        
         _lastTargetLotusNo = dplayer.targetLotusNo;
         if (doAccel) {
             if (dplayer.accelCount > 0) {
-                // これ以上加速しなくてもたどり着けそうなら勿体ないから加速しない
-                if (!isEnableReachInCurrentAccel(dplayer, targetLotus.pos(), targetLotus.radius())) {
+                // アクセルを節約しているとき、これ以上加速しなくてもたどり着けそうなら勿体ないから加速しない
+                if (!saveAccel || !isEnableReachInCurrentAccel(dplayer, targetLotus.pos(), targetLotus.radius())) {
                     _changedTarget = false;
                     return Action::Accel(goal);
                 }
