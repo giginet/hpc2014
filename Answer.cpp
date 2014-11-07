@@ -36,6 +36,7 @@ namespace {
     Field _field;
     /// ハスのリスト（グローバルにアクセスできるようにしている）
     LotusCollection _lotuses;
+    
     /// 予想最低速度
     float _minSpeed = 0;
     
@@ -222,7 +223,7 @@ namespace hpc {
     }
     
     /// GetNextActionをダミープレイヤーでシミュレーションする
-    Action simulateGetNextAction(DummyPlayer dplayer, float minSpeed)
+    Action simulateGetNextAction(DummyPlayer dplayer, float minSpeed, bool isSimulate)
     {
         // 最低限残しておくアクセル回数
         bool saveAccel = true;
@@ -237,11 +238,6 @@ namespace hpc {
         Vec2 sub = goal - dplayer.pos;
         Vec2 vel = dplayer.vel + _field.flowVel();
         const Lotus& targetLotus = _lotuses[dplayer.targetLotusNo];
-        
-        float diffAngle = 0;
-        if (vel.squareLength() > 0) {
-            diffAngle = Math::Abs(Math::RadToDeg(vel.angle(sub)));
-        }
         
         // 前回と目的地が変わってたら
         if (vel.length() <= minSpeed) {
@@ -293,16 +289,20 @@ namespace hpc {
         // 予想最低速度を算出する
         float minPassedTurn = Parameter::GameTurnPerStage;
         float minSpeed = Parameter::CharaAccelSpeed();
+        const float stopTime = Math::Abs(Parameter::CharaAccelSpeed() / Parameter::CharaDecelSpeed());
         
         // minSpeedを徐々に変えてって一番早く回れた奴を採用する
-        for (float speed = Parameter::CharaAccelSpeed(); speed >= Parameter::CharaDecelSpeed() * 2; speed -= 0.01) {
+        for (float aps = 1.0; aps <= stopTime; aps += 1.0) {
+            int requiredAccelCount = 0;
+            int wholeAccelCount = player.accelCount();
+            float speed = Parameter::CharaAccelSpeed() - ((aps - 1) * Parameter::CharaDecelSpeed());
             // めっちゃリアルっぽいシミュレーションする
             DummyPlayer dummyPlayer = createDummyPlayer(player);
             // ゴールするまでリアルシミュレーション
-            // 経験上、2500ターンは超えない気がするから2500まで
-            for (int passedTurn = 0; passedTurn <= 2500; ++passedTurn) {
+            // 経験上、2300ターンは超えない気がするから2300まで
+            for (int passedTurn = 0; passedTurn <= 2300; ++passedTurn) {
                 const Lotus& targetLotus = _lotuses[dummyPlayer.targetLotusNo];
-                Action nextAction = simulateGetNextAction(dummyPlayer, speed);
+                Action nextAction = simulateGetNextAction(dummyPlayer, speed, true);
                 if (nextAction.type() == ActionType_Accel && dummyPlayer.accelCount > 0) {
                     // アクセルを踏む
                     const Vec2 toTargetVec = nextAction.value() - dummyPlayer.pos;
@@ -310,6 +310,7 @@ namespace hpc {
                     if (!toTargetVec.isZero()) {
                         --dummyPlayer.accelCount;
                         dummyPlayer.vel = toTargetVec.getNormalized(Parameter::CharaAccelSpeed());
+                        ++requiredAccelCount;
                     }
                 } else {
                     // Waitなら何もしない
@@ -342,7 +343,7 @@ namespace hpc {
                 // ゴールしてたら探索終了
                 if (dummyPlayer.roundCount == Parameter::StageRoundCount)
                 {
-                    if (passedTurn < minPassedTurn) {
+                    if (wholeAccelCount >= requiredAccelCount && passedTurn < minPassedTurn) {
                         // 最速だったら記録
                         minPassedTurn = passedTurn;
                         minSpeed = speed;
@@ -359,14 +360,16 @@ namespace hpc {
                 if (dummyPlayer.accelWaitTurn <= 0) {
                     dummyPlayer.accelCount = Math::Min(dummyPlayer.accelCount + 1, Parameter::CharaAccelCountMax);
                     dummyPlayer.accelWaitTurn = Parameter::CharaAddAccelWaitTurn;
+                    ++wholeAccelCount;
                 }
             }
         }
         _minSpeed = minSpeed;
         
-        //std::cout << "StageNO: " <<  _stageNo << std::endl;
-        //std::cout << "minSpeed: " << minSpeed << std::endl;
-        //std::cout << "estimateTurn " << minPassedTurn << std::endl;
+        /*
+std::cout << "StageNO: " <<  _stageNo << std::endl;
+        std::cout << "minSpeed: " << minSpeed << std::endl;
+        std::cout << "estimateTurn " << minPassedTurn << std::endl;*/
         
         // シミュレーション後にグローバル変数を元に戻す
         _lastAccelTurn = 0;
@@ -386,7 +389,7 @@ namespace hpc {
     Action Answer::GetNextAction(const StageAccessor& aStageAccessor)
     {
         DummyPlayer dplayer = createDummyPlayer(aStageAccessor.player());
-        return simulateGetNextAction(dplayer, _minSpeed);
+        return simulateGetNextAction(dplayer, _minSpeed, false);
     }
     
 }
