@@ -215,7 +215,7 @@ namespace hpc {
         const Lotus& targetLotus = _lotuses[dplayer.targetLotusNo];
         
         // 前回と目的地が変わってたら
-        if (vel.length() <= minSpeed) {
+        if (vel.length() <= minSpeed && dplayer.accelCount >= 2) {
             // そもそも速度が規定値以下なら踏む
             doAccel = true;
         } else {
