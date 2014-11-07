@@ -48,7 +48,6 @@ namespace hpc {
     // 加速してからtターン後の位置を返します
     float distanceAfterTurn(float t, const StageAccessor& aStageAccessor)
     {
-        const Chara& player = aStageAccessor.player();
         float v0 = Parameter::CharaAccelSpeed();
         float a = -Parameter::CharaDecelSpeed();
         if (t >= v0 / -a) {
@@ -57,7 +56,7 @@ namespace hpc {
         return v0 * t + 0.5 * a * t * t;
     }
     
-    /// ハスa, b, cを通るときに、一番いい感じでbに接触できるようなb点を返します
+    /// ハスa, b, cを通るときに、一番いい感じでbに接触できるような点を返します
     Vec2 getTargetByThreePoints(const Lotus& target, Vec2 prevPoint, Vec2 nextPoint)
     {
         // acベクトルを生成
@@ -85,38 +84,59 @@ namespace hpc {
         return target1;
     }
     
-    Vec2 getNextTarget(int targetLotusNo, const StageAccessor& aStageAccessor, int loopNo)
+    // ハスa, bを通るときに、一番いい感じでaに接触できるような点を返します
+    Vec2 getTargetByTwoPoints(const Lotus& target, Vec2 nextPoint)
     {
+        // abベクトルを生成
+        Vec2 ab = nextPoint - target.pos();
+        ab.normalize();
         
-        
+        Vec2 goal = target.pos() + ab * target.radius();
+        return goal;
+    }
+    
+    // 次の目的地を返します
+    Vec2 getNextTarget(const StageAccessor& aStageAccessor)
+    {
         const float v0 = Parameter::CharaAccelSpeed();
         const float d = -Parameter::CharaDecelSpeed();
         float t = -(v0 / d);
-        
         const Chara& player = aStageAccessor.player();
         const Field& field = aStageAccessor.field();
         const LotusCollection& lotuses = aStageAccessor.lotuses();
         int lotusCount = lotuses.count();
         
-        Vec2 goal;
-        if (targetLotusNo == 0 && loopNo == 1) {
-            // まだ一つも回ってないとき
-            // 初期位置、1個目、2個目で三角形を作る
-            Vec2 prevPoint = initialPlayerPosition; // 初期位置
-            Vec2 nextPoint = lotuses[1].pos(); // 1個目
-            const Lotus& target = lotuses[0];
-            goal = getTargetByThreePoints(target, prevPoint, nextPoint);
+        int targetLotusNo = player.targetLotusNo();
+        int loopNo = player.roundCount();
+        // もし、targetが最後ハスだったら
+        if (loopNo == 3 && targetLotusNo == lotusCount - 1)
+        {
+            const Lotus& lotus = lotuses[targetLotusNo];
+            Vec2 sub = player.pos() - lotus.pos();
+            sub.normalize();
+            return lotus.pos() + sub * lotus.radius();
         } else {
-            // それ以外の時
-            Vec2 prevPoint = lotuses[(targetLotusNo - 1 + lotusCount) % lotusCount].pos(); // 1つ前
-            Vec2 nextPoint = lotuses[(targetLotusNo + 1) % lotusCount].pos(); // 1つ後
-            const Lotus& target = lotuses[targetLotusNo];
-            goal = getTargetByThreePoints(target, prevPoint, nextPoint);
+            Vec2 goal;
+            if (targetLotusNo == 0 && loopNo == 1) {
+                // まだ一つも回ってないとき
+                // 初期位置、1個目、2個目で三角形を作る
+                Vec2 prevPoint = initialPlayerPosition; // 初期位置
+                Vec2 nextPoint = lotuses[1].pos(); // 1個目
+                const Lotus& target = lotuses[0];
+                goal = getTargetByThreePoints(target, prevPoint, nextPoint);
+            } else {
+                // それ以外の時
+                Vec2 prevPoint = lotuses[(targetLotusNo - 1 + lotusCount) % lotusCount].pos(); // 1つ前
+                Vec2 nextPoint = lotuses[(targetLotusNo + 1) % lotusCount].pos(); // 1つ後
+                const Lotus& target = lotuses[targetLotusNo];
+                goal = getTargetByThreePoints(target, prevPoint, nextPoint);
+            }
+            Vec2 stream = field.flowVel();
+            
+            goal -= stream * t;
+            return goal;
         }
-        Vec2 stream = field.flowVel();
         
-        goal -= stream * t;
-        return goal;
     }
     
     // 今のアクセルで到達可能な地点
@@ -140,6 +160,7 @@ namespace hpc {
         return (goal - target).squareLength() <= Parameter::CharaRadius();
     }
     
+    // 単純にハスの間の総距離を足して、全体の総距離を概算する
     float calcWholeDistance(const StageAccessor& aStageAccessor)
     {
         float distance = 0;
@@ -148,17 +169,29 @@ namespace hpc {
         
         int lotusesCount = lotuses.count();
         Vec2 current = player.pos();
-        Vec2 firstTarget = getNextTarget(0, aStageAccessor, 1);
+        Vec2 firstTarget = lotuses[0].pos();
         // 最初の距離
         float initialDistance = (firstTarget - current).length();
-        current = firstTarget;
+        // 最後の距離
+        float lastDistance = (lotuses[lotuses.count() - 1].pos() - lotuses[0].pos()).length();
+        
+        /*current = firstTarget;
         for (int i = 0; i < lotusesCount; ++i) {
             const Lotus& lotus = lotuses[i];
             const Lotus& next = lotuses[(i + 1) % lotuses.count()];
             distance += (next.pos() - lotus.pos()).length();
         }
         // 総距離の算出
-        distance = distance * 3 + initialDistance;
+        distance = distance * 3 + initialDistance;*/
+        
+        for (int i = 0; i < lotusesCount; ++i) {
+            const Lotus& lotus = lotuses[i];
+            const Lotus& next = lotuses[(i + 1) % lotuses.count()];
+            distance += (next.pos() - lotus.pos()).length();
+        }
+        
+        distance = distance * 3 + initialDistance - lastDistance;
+        
         return distance;
     }
     
@@ -231,7 +264,6 @@ namespace hpc {
     Action Answer::GetNextAction(const StageAccessor& aStageAccessor)
     {
         const Chara& player = aStageAccessor.player();
-        const EnemyAccessor& enemies = aStageAccessor.enemies();
         const LotusCollection& lotuses = aStageAccessor.lotuses();
         //auto distance =
         // 進む距離
@@ -240,15 +272,14 @@ namespace hpc {
         // 最低限残しておくアクセル回数
         int saveAccelThreshold = 2;
         if (player.passedLotusCount() > maxLotusCount - 1) {
-         // 最後の方は自重しなくする
-         saveAccelThreshold = 1;
-         }
+            // 最後の方は自重しなくする
+            saveAccelThreshold = 1;
+        }
         
         bool doAccel = false;
         // if (ac > 0) {
         
-        int loopCount = (int)(player.passedLotusCount() / aStageAccessor.lotuses().count()) + 1;
-        Vec2 goal = getNextTarget(player.targetLotusNo(), aStageAccessor, loopCount);
+        Vec2 goal = getNextTarget(aStageAccessor);
         Vec2 sub = goal - player.pos();
         Vec2 vel = player.vel();
         float diffAngle = 0;
