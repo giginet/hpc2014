@@ -12,6 +12,7 @@
 // Answer.cpp 専用のインクルードファイルです。
 // 別のファイルをインクルードした場合、評価時には削除されます。
 #include "HPCAnswerInclude.hpp"
+#include <iostream>
 
 namespace {
     
@@ -24,6 +25,7 @@ namespace {
         int passedTurn;
         int passedLotusCount;
         int accelCount;
+        int accelWaitTurn;
         int targetLotusNo;
         Vec2 pos;
         Vec2 vel;
@@ -46,6 +48,10 @@ namespace {
     
     /// 過去の移動履歴
     Vec2 _positionHistory[Parameter::GameTurnPerStage];
+    
+    
+    /// デバッグ用
+    int _stageNo = 0;
 }
 
 /// プロコン問題環境を表します。
@@ -59,6 +65,7 @@ namespace hpc {
         dummy.passedTurn = 0;
         dummy.passedLotusCount = 0;
         dummy.accelCount = 0;
+        dummy.accelWaitTurn = Parameter::CharaAddAccelWaitTurn;
         dummy.targetLotusNo = 0;
         dummy.pos = _initialPlayerPosition;
         dummy.vel = Vec2();
@@ -73,6 +80,7 @@ namespace hpc {
         dummy.passedTurn = player.passedTurn();
         dummy.passedLotusCount = player.passedLotusCount();
         dummy.accelCount = player.accelCount();
+        dummy.accelWaitTurn = player.accelWaitTurn();
         dummy.targetLotusNo = player.targetLotusNo();
         dummy.pos = player.pos();
         dummy.vel = player.vel();
@@ -214,83 +222,8 @@ namespace hpc {
         return false;
     }
     
-    /// 単純にハスの間の総距離を足して、全体の総距離を概算する
-    float calcWholeDistance(const StageAccessor& aStageAccessor)
-    {
-        float distance = 0;
-        const LotusCollection& lotuses = aStageAccessor.lotuses();
-        const Chara& player = aStageAccessor.player();
-        
-        int lotusesCount = lotuses.count();
-        Vec2 current = player.pos();
-        Vec2 firstTarget = lotuses[0].pos();
-        // 最初の距離
-        float initialDistance = (firstTarget - current).length();
-        // 最後の距離
-        float lastDistance = (lotuses[lotuses.count() - 1].pos() - lotuses[0].pos()).length();
-        
-        /*current = firstTarget;
-         for (int i = 0; i < lotusesCount; ++i) {
-         const Lotus& lotus = lotuses[i];
-         const Lotus& next = lotuses[(i + 1) % lotuses.count()];
-         distance += (next.pos() - lotus.pos()).length();
-         }
-         // 総距離の算出
-         distance = distance * 3 + initialDistance;*/
-        
-        for (int i = 0; i < lotusesCount; ++i) {
-            const Lotus& lotus = lotuses[i];
-            const Lotus& next = lotuses[(i + 1) % lotuses.count()];
-            distance += (next.pos() - lotus.pos()).length();
-        }
-        
-        distance = distance * 3 + initialDistance - lastDistance;
-        
-        return distance;
-    }
-    
-    //------------------------------------------------------------------------------
-    /// 各ステージ開始時に呼び出されます。
-    ///
-    /// この関数を実装することで、各ステージに対して初期処理を行うことができます。
-    ///
-    /// @param[in] aStageAccessor 現在のステージ。
-    void Answer::Init(const StageAccessor& aStageAccessor)
-    {
-        _changedTarget = false;
-        const Chara& player = aStageAccessor.player();
-        _initialPlayerPosition = player.pos();
-        _positionHistory[0] = player.pos();
-        // fieldとlotusesは変更され得ないので、最初にコピーしてグローバルにアクセスできるようにしている
-        _field = aStageAccessor.field();
-        _lotuses = aStageAccessor.lotuses();
-        
-        float v0 = Parameter::CharaAccelSpeed();
-        float a = -1 * Parameter::CharaDecelSpeed();
-        float stopTime = v0 / -a;
-        float waitTurn = player.accelWaitTurn();
-        
-        // 予想最低速度を算出する
-        int lotusCount = _lotuses.count();
-        float wd = calcWholeDistance(aStageAccessor);
-        for (float apt = 1; apt < stopTime; ++apt) {
-            float speed = v0 + a * (apt - 1);
-            // 予想ターン数
-            float estimateTurn = wd / speed;
-            int accelCount = (estimateTurn / waitTurn) + player.accelCount();
-            int requiredAccel = (estimateTurn / apt) + (lotusCount * 3 - 1);
-            if (accelCount > requiredAccel) {
-                _minSpeed = speed;
-                break;
-            }
-        }
-        
-        // 最後に通ったハス
-        _lastTargetLotusNo = player.targetLotusNo();
-    }
-    
     /// GetNextActionをダミープレイヤーでシミュレーションする
-    Action simulateGetNextAction(DummyPlayer dplayer)
+    Action simulateGetNextAction(DummyPlayer dplayer, float minSpeed)
     {
         // 進む距離
         int maxLotusCount = _lotuses.count();
@@ -315,7 +248,7 @@ namespace hpc {
         }
         
         // 前回と目的地が変わってたら
-        if (_lastTargetLotusNo != dplayer.targetLotusNo && vel.length() <= _minSpeed) {
+        if (_lastTargetLotusNo != dplayer.targetLotusNo && vel.length() <= minSpeed) {
             // そもそも速度が規定値以下なら踏む
             doAccel = true;
         } else {
@@ -332,7 +265,7 @@ namespace hpc {
         _positionHistory[dplayer.passedTurn] = dplayer.pos;
         
         // 予想最低速度を下回ってたらアクセルを踏む
-        if (vel.length() < _minSpeed) {
+        if (vel.length() < minSpeed) {
             doAccel = true;
         }
         
@@ -355,6 +288,101 @@ namespace hpc {
     }
     
     //------------------------------------------------------------------------------
+    /// 各ステージ開始時に呼び出されます。
+    ///
+    /// この関数を実装することで、各ステージに対して初期処理を行うことができます。
+    ///
+    /// @param[in] aStageAccessor 現在のステージ。
+    void Answer::Init(const StageAccessor& aStageAccessor)
+    {
+        _changedTarget = false;
+        const Chara& player = aStageAccessor.player();
+        _initialPlayerPosition = player.pos();
+        _positionHistory[0] = player.pos();
+        // fieldとlotusesは変更され得ないので、最初にコピーしてグローバルにアクセスできるようにしている
+        _field = aStageAccessor.field();
+        _lotuses = aStageAccessor.lotuses();
+        
+        // 予想最低速度を算出する
+        float minPassedTurn = Parameter::GameTurnPerStage;
+        float minSpeed = Parameter::CharaAccelSpeed();
+        
+        // minSpeedを徐々に変えてって一番早く回れた奴を採用する
+        for (float speed = Parameter::CharaAccelSpeed(); speed >= Parameter::CharaDecelSpeed() * 2; speed -= 0.01) {
+            // めっちゃリアルっぽいシミュレーションする
+            DummyPlayer dummyPlayer = createDummyPlayer(player);
+            // ゴールするまでリアルシミュレーション
+            // 経験上、2000ターンは超えない気がするから2000まで
+            for (int passedTurn = 0; passedTurn <= 2000; ++passedTurn) {
+                const Lotus& targetLotus = _lotuses[dummyPlayer.targetLotusNo];
+                Action nextAction = simulateGetNextAction(dummyPlayer, speed);
+                if (nextAction.type() == ActionType_Accel && dummyPlayer.accelCount > 0) {
+                    // アクセルを踏む
+                    const Vec2 toTargetVec = nextAction.value() - dummyPlayer.pos;
+                    // 目標座標とキャラ座標が同値の場合、何もしない
+                    if (!toTargetVec.isZero()) {
+                        --dummyPlayer.accelCount;
+                        dummyPlayer.vel = toTargetVec.getNormalized(Parameter::CharaAccelSpeed());
+                    }
+                } else {
+                    // Waitなら何もしない
+                }
+                Vec2 prevPos = dummyPlayer.pos;
+                dummyPlayer.pos += dummyPlayer.vel;
+                dummyPlayer.pos += _field.flowVel();
+                
+                // 減速させる
+                if (!dummyPlayer.vel.isZero()) {
+                    const float len = Math::Max(
+                                                dummyPlayer.vel.length() - Parameter::CharaDecelSpeed()
+                                                , 0.0f
+                                                );
+                    if (0.0f < len) {
+                        dummyPlayer.vel.normalize(len);
+                    } else {
+                        dummyPlayer.vel.reset();
+                    }
+                }
+                if (Collision::IsHit(targetLotus.region(), Circle(prevPos, Parameter::CharaRadius()), dummyPlayer.pos)) {
+                    // 目標の蓮を通過したら、次の蓮との判定を行う
+                    ++dummyPlayer.targetLotusNo;
+                    // 一周回ったら周回数加算
+                    if (_lotuses.count() == dummyPlayer.targetLotusNo) {
+                        dummyPlayer.targetLotusNo = 0;
+                        ++dummyPlayer.roundCount;
+                    }
+                }
+                // ゴールしてたら探索終了
+                if (dummyPlayer.roundCount == Parameter::StageRoundCount)
+                {
+                    if (passedTurn < minPassedTurn) {
+                        // 最速だったら記録
+                        minPassedTurn = passedTurn;
+                        minSpeed = speed;
+                    }
+                    break;
+                }
+                if (passedTurn >= minPassedTurn) {
+                    // 経過ターン数が今までの最低値を上回ったらもうチェックする意味ないので省略
+                    break;
+                }
+                // プレイヤーの更新
+                dummyPlayer.passedTurn = passedTurn;
+                --dummyPlayer.accelWaitTurn;
+                if (dummyPlayer.accelWaitTurn <= 0) {
+                    dummyPlayer.accelCount = Math::Min(dummyPlayer.accelCount + 1, Parameter::CharaAccelCountMax);
+                    dummyPlayer.accelWaitTurn = Parameter::CharaAddAccelWaitTurn;
+                }
+            }
+        }
+        _minSpeed = minSpeed;
+        
+        // 最後に通ったハス
+        _lastTargetLotusNo = -1;
+        ++_stageNo;
+    }
+    
+    //------------------------------------------------------------------------------
     /// 各ターンでの動作を返します。
     ///
     /// @param[in] aStageAccessor 現在ステージの情報。
@@ -363,7 +391,7 @@ namespace hpc {
     Action Answer::GetNextAction(const StageAccessor& aStageAccessor)
     {
         DummyPlayer dplayer = createDummyPlayer(aStageAccessor.player());
-        return simulateGetNextAction(dplayer);
+        return simulateGetNextAction(dplayer, _minSpeed);
     }
     
 }
