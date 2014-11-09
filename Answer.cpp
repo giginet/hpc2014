@@ -138,36 +138,10 @@ namespace hpc {
             return lotus.pos() + sub;
         } else {
             // それ以外の時
-            Vec2 goal;
-            Vec2 current = player.pos;
-            
-            Vec2 initialPoint;
-            if (roundNo == 0 && targetLotusNo == 0) {
-                initialPoint = player.pos;
-            } else {
-                initialPoint = _lotuses[(targetLotusNo - 1 + lotusCount) % lotusCount].pos();
-            }
-            
             const Lotus& target = _lotuses[targetLotusNo];
             const Lotus& target2 = _lotuses[(targetLotusNo + 1) % lotusCount];
-            const Lotus& target3 = _lotuses[(targetLotusNo + 2) % lotusCount];
             
-            Vec2 goalA0 = getTargetByTwoPoints(target, target2.pos());
-            Vec2 goalA1 = getTargetByTwoPoints(target2, target3.pos());
-            
-            Vec2 sub0 = initialPoint - target.pos();
-            sub0.normalize(target.radius());
-            Vec2 goalB0 = target.pos() + sub0;
-            
-            Vec2 sub1 = target.pos() - target2.pos();
-            sub1.normalize(target2.radius());
-            Vec2 goalB1 = target2.pos() + sub1;
-            
-            if ((current - goalA0).squareLength() + (goalA1 - goalA0).squareLength() < (goalB0 - current).squareLength() + (goalB1 - goalB0).squareLength()) {
-                goal = goalA0;
-            } else {
-                goal = goalB0;
-            }
+            Vec2 goal = getTargetByTwoPoints(target, target2.pos());
             
             Vec2 stream = _field.flowVel();
             goal -= stream * t;
@@ -219,6 +193,7 @@ namespace hpc {
         return false;
     }
     
+    
     /// GetNextActionをダミープレイヤーでシミュレーションする
     Action simulateGetNextAction(DummyPlayer dplayer, float minSpeed, const EnemyAccessor* enemies)
     {
@@ -258,6 +233,19 @@ namespace hpc {
         
         _lastTargetLotusNo = dplayer.targetLotusNo;
         _positionHistory[dplayer.passedTurn] = dplayer.pos;
+        
+        /// 本番の時は敵を考慮する
+        if (enemies != 0) {
+            for (int i = 0; i < enemies->count(); ++i) {
+                const Chara& enemy = enemies->operator[](i);
+                bool isHit = isEnableReachInCurrentAccel(dplayer, enemy.pos(), Parameter::CharaRadius());
+                if (isHit) {
+                    // 誰かにあたりそうなら加速しない
+                    doAccel = false;
+                    break;
+                }
+            }
+        }
         
         if (doAccel) {
             if (dplayer.accelCount > 0) {
