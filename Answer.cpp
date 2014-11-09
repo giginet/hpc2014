@@ -202,12 +202,7 @@ namespace hpc {
             goal = getTargetByTwoPoints(target, target2.pos());
         }
         Vec2 stream = _field.flowVel();
-        int reachTurn = calcTurnToReachRegion(player, target.region(), t);
-        if (reachTurn == -1) {
-            goal -= stream * t;
-        } else {
-            goal -= stream * reachTurn;
-        }
+        goal -= stream * t;
         return goal;
         
     }
@@ -218,6 +213,21 @@ namespace hpc {
         // 何ターン後に止まるか
         float stopTurn = dplayer.vel.length() / Parameter::CharaDecelSpeed();
         return isEnableReachInCurrentAccel(dplayer, target, radius, stopTurn);
+    }
+    
+    /// 特定ターン以内に敵と自機がぶつかりそうならぶつかるであろうターンを返します。そうじゃなければ-1を返します
+    int turnToHitWithEnemy(DummyPlayer dplayer, const Chara& enemy, int maxTurn)
+    {
+        DummyPlayer denemy = createDummyPlayer(enemy);
+        for (int passedTurn = 1; passedTurn <= maxTurn; ++passedTurn) {
+            Vec2 myFuturePos = posAfterTurn(dplayer, passedTurn);
+            Vec2 enemyFuturePos = posAfterTurn(denemy, passedTurn);
+            if (Collision::IsHit(Circle(myFuturePos, Parameter::CharaRadius()),
+                                 Circle(enemyFuturePos, Parameter::CharaRadius()))) {
+                return passedTurn;
+            }
+        }
+        return -1;
     }
     
     /// GetNextActionをダミープレイヤーでシミュレーションする
@@ -260,54 +270,18 @@ namespace hpc {
         _lastTargetLotusNo = dplayer.targetLotusNo;
         _positionHistory[dplayer.passedTurn] = dplayer.pos;
         
-        /// 本番の時は敵を考慮する
-        // アクセルを踏む前に、敵がいたらよけれそうなルートを探索する
+        // 本番の時は敵を考慮する
+        // アクセルを踏む前に、敵がいたらグッと耐える
         if (enemies != 0 && doAccel) {
-            Vec2 originalVel = dplayer.vel;
-            for (int angle = 0; angle <= 45; angle += 5) {
-                Vec2 vel0 = goal - dplayer.pos;
-                vel0.rotate(Math::DegToRad(angle));
-                vel0.normalize(Parameter::CharaAccelSpeed());
-                dplayer.vel = vel0;
-                bool isHitNoBody = true;
-                for (int i = 0; i < enemies->count(); ++i) {
-                    const Chara& enemy = enemies->operator[](i);
-                    bool isHit = isEnableReachInCurrentAccel(dplayer, enemy.pos(), Parameter::CharaRadius(), 1);
-                    if (isHit && (dplayer.pos - enemy.pos()).length() <= Parameter::CharaRadius() * 2.5) {
-                        isHitNoBody = false;
-                        break;
-                    }
-                }
-                if (isHitNoBody) {
-                    Vec2 newSub = goal - dplayer.pos;
-                    newSub.rotate(Math::DegToRad(angle));
-                    goal = dplayer.pos + newSub;
+            for (int i = 0; i < enemies->count(); ++i) {
+                const Chara& enemy = enemies->operator[](i);
+                int isHit = turnToHitWithEnemy(dplayer, enemy, 5);
+                // 3ターン以内にぶつかるなら耐える
+                if (isHit >= 1 && isHit <= 3) {
+                    doAccel = false;
                     break;
-                } else {
-                    isHitNoBody = true;
-                    Vec2 vel1 = goal - dplayer.pos;
-                    vel1.rotate(Math::DegToRad(-angle));
-                    vel1.normalize(Parameter::CharaAccelSpeed());
-                    dplayer.vel = vel1;
-                    for (int i = 0; i < enemies->count(); ++i) {
-                        const Chara& enemy = enemies->operator[](i);
-                        bool isHit = isEnableReachInCurrentAccel(dplayer, enemy.pos(), Parameter::CharaRadius(), 1);
-                        if (isHit && (dplayer.pos - enemy.pos()).length() <= Parameter::CharaRadius() * 2.5) {
-                            isHitNoBody = false;
-                            break;
-                        }
-                    }
-                    if (isHitNoBody) {
-                        Vec2 newSub = goal - dplayer.pos;
-                        newSub.rotate(Math::DegToRad(-angle));
-                        goal = dplayer.pos + newSub;
-                        break;
-                    }
                 }
-                // 左右45度全部ダメならアクセルを踏まない
-                doAccel = false;
             }
-            dplayer.vel = originalVel;
         }
         
         if (doAccel) {
