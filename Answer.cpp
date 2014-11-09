@@ -138,9 +138,36 @@ namespace hpc {
             return lotus.pos() + sub;
         } else {
             // それ以外の時
+            Vec2 goal;
+            Vec2 current = player.pos;
+            
+            Vec2 initialPoint;
+            if (roundNo == 0 && targetLotusNo == 0) {
+                initialPoint = player.pos;
+            } else {
+                initialPoint = _lotuses[(targetLotusNo - 1 + lotusCount) % lotusCount].pos();
+            }
+            
             const Lotus& target = _lotuses[targetLotusNo];
             const Lotus& target2 = _lotuses[(targetLotusNo + 1) % lotusCount];
-            Vec2 goal = getTargetByTwoPoints(target, target2.pos());
+            const Lotus& target3 = _lotuses[(targetLotusNo + 2) % lotusCount];
+            
+            Vec2 goalA0 = getTargetByTwoPoints(target, target2.pos());
+            Vec2 goalA1 = getTargetByTwoPoints(target2, target3.pos());
+            
+            Vec2 sub0 = initialPoint - target.pos();
+            sub0.normalize(target.radius());
+            Vec2 goalB0 = target.pos() + sub0;
+            
+            Vec2 sub1 = target.pos() - target2.pos();
+            sub1.normalize(target2.radius());
+            Vec2 goalB1 = target2.pos() + sub1;
+            
+            if ((current - goalA0).squareLength() + (goalA1 - goalA0).squareLength() < (goalB0 - current).squareLength() + (goalB1 - goalB0).squareLength()) {
+                goal = goalA0;
+            } else {
+                goal = goalB0;
+            }
             
             Vec2 stream = _field.flowVel();
             goal -= stream * t;
@@ -193,7 +220,7 @@ namespace hpc {
     }
     
     /// GetNextActionをダミープレイヤーでシミュレーションする
-    Action simulateGetNextAction(DummyPlayer dplayer, float minSpeed, bool isSimulate)
+    Action simulateGetNextAction(DummyPlayer dplayer, float minSpeed, const EnemyAccessor* enemies)
     {
         // 最低限残しておくアクセル回数
         bool saveAccel = true;
@@ -277,7 +304,7 @@ namespace hpc {
             // 経験上、2300ターンは超えない気がするから2300まで
             for (int passedTurn = 0; passedTurn <= 2300; ++passedTurn) {
                 const Lotus& targetLotus = _lotuses[dummyPlayer.targetLotusNo];
-                Action nextAction = simulateGetNextAction(dummyPlayer, speed, true);
+                Action nextAction = simulateGetNextAction(dummyPlayer, speed, 0);
                 if (nextAction.type() == ActionType_Accel && dummyPlayer.accelCount > 0) {
                     // アクセルを踏む
                     const Vec2 toTargetVec = nextAction.value() - dummyPlayer.pos;
@@ -357,7 +384,8 @@ namespace hpc {
     Action Answer::GetNextAction(const StageAccessor& aStageAccessor)
     {
         DummyPlayer dplayer = createDummyPlayer(aStageAccessor.player());
-        return simulateGetNextAction(dplayer, _minSpeed, false);
+        const EnemyAccessor* enemies = &aStageAccessor.enemies();
+        return simulateGetNextAction(dplayer, _minSpeed, enemies);
     }
     
 }
