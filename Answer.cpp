@@ -119,37 +119,6 @@ namespace hpc {
         return goal;
     }
     
-    /// 次の目的地を返します
-    Vec2 getNextTarget(DummyPlayer player)
-    {
-        const float v0 = Parameter::CharaAccelSpeed();
-        const float d = -Parameter::CharaDecelSpeed();
-        float t = -(v0 / d);
-        int lotusCount = _lotuses.count();
-        
-        int targetLotusNo = player.targetLotusNo;
-        int roundNo = player.roundCount;
-        // もし、targetが最後ハスだったら
-        if (roundNo == 2 && targetLotusNo == lotusCount - 1)
-        {
-            const Lotus& lotus = _lotuses[targetLotusNo];
-            Vec2 sub = player.pos - lotus.pos();
-            sub.normalize(lotus.radius() * 0.75);
-            return lotus.pos() + sub;
-        } else {
-            // それ以外の時
-            const Lotus& target = _lotuses[targetLotusNo];
-            const Lotus& target2 = _lotuses[(targetLotusNo + 1) % lotusCount];
-            
-            Vec2 goal = getTargetByTwoPoints(target, target2.pos());
-            
-            Vec2 stream = _field.flowVel();
-            goal -= stream * t;
-            return goal;
-        }
-        
-    }
-    
     /// nターン後の位置を返す
     Vec2 posAfterTurn(DummyPlayer dplayer, int afterTurn) {
         float stopTurn = dplayer.vel.length() / Parameter::CharaDecelSpeed();
@@ -175,24 +144,81 @@ namespace hpc {
         return posAfterTurn(dplayer, stopTurn);
     }
     
-    // targetに現在のアクセルだけで到達可能かどうか
-    bool isEnableReachInCurrentAccel(DummyPlayer dplayer, Vec2 target, float radius)
+    /// ある地点までplayerが到達するのに何ターンかかるか計算します
+    // 到達不可能なら-1が返ります
+    int calcTurnToReachRegion(DummyPlayer dplayer, Circle region, int maxTurn)
     {
         Vec2 prevPos = dplayer.pos;
         // 何ターン後に止まるか
         float stopTurn = dplayer.vel.length() / Parameter::CharaDecelSpeed();
+        if (maxTurn >= stopTurn) {
+            maxTurn = stopTurn;
+        }
         float charaRadius = Parameter::CharaRadius();
         // 1ターンずつシミュレーションする
-        for (int passedTurn = 1; passedTurn <= stopTurn; ++passedTurn) {
+        for (int passedTurn = 1; passedTurn <= maxTurn; ++passedTurn) {
             Vec2 futurePos = posAfterTurn(dplayer, passedTurn);
-            if (Collision::IsHit(Circle(target, radius), Circle(prevPos, charaRadius), futurePos)) {
-                return true;
+            if (Collision::IsHit(region, Circle(prevPos, charaRadius), futurePos)) {
+                return passedTurn;
             }
             prevPos = futurePos;
         }
-        return false;
+        return -1;
     }
     
+    // targetに現在のアクセルだけでtターン以内に到達可能かどうか
+    bool isEnableReachInCurrentAccel(DummyPlayer dplayer, Vec2 target, float radius, int t)
+    {
+        Circle region = Circle(target, radius);
+        int turn = calcTurnToReachRegion(dplayer, region, t);
+        if (turn == -1) {
+            return false;
+        }
+        return true;
+    }
+    
+    /// 次の目的地を返します
+    Vec2 getNextTarget(DummyPlayer player)
+    {
+        const float v0 = Parameter::CharaAccelSpeed();
+        const float d = -Parameter::CharaDecelSpeed();
+        float t = -(v0 / d);
+        int lotusCount = _lotuses.count();
+        Vec2 goal;
+        int targetLotusNo = player.targetLotusNo;
+        int roundNo = player.roundCount;
+        const Lotus& target = _lotuses[targetLotusNo];
+        
+        // もし、targetが最後ハスだったら
+        if (roundNo == 2 && targetLotusNo == lotusCount - 1)
+        {
+            Vec2 sub = player.pos - target.pos();
+            sub.normalize(target.radius() * 0.75);
+            goal = target.pos() + sub;
+        } else {
+            // それ以外の時
+            const Lotus& target2 = _lotuses[(targetLotusNo + 1) % lotusCount];
+            
+            goal = getTargetByTwoPoints(target, target2.pos());
+        }
+        Vec2 stream = _field.flowVel();
+        int reachTurn = calcTurnToReachRegion(player, target.region(), t);
+        if (reachTurn == -1) {
+            goal -= stream * t;
+        } else {
+            goal -= stream * reachTurn;
+        }
+        return goal;
+        
+    }
+    
+    // targetに現在のアクセルだけで止まるまでに到達可能かどうか
+    bool isEnableReachInCurrentAccel(DummyPlayer dplayer, Vec2 target, float radius)
+    {
+        // 何ターン後に止まるか
+        float stopTurn = dplayer.vel.length() / Parameter::CharaDecelSpeed();
+        return isEnableReachInCurrentAccel(dplayer, target, radius, stopTurn);
+    }
     
     /// GetNextActionをダミープレイヤーでシミュレーションする
     Action simulateGetNextAction(DummyPlayer dplayer, float minSpeed, const EnemyAccessor* enemies)
@@ -235,16 +261,53 @@ namespace hpc {
         _positionHistory[dplayer.passedTurn] = dplayer.pos;
         
         /// 本番の時は敵を考慮する
-        if (enemies != 0) {
-            for (int i = 0; i < enemies->count(); ++i) {
-                const Chara& enemy = enemies->operator[](i);
-                bool isHit = isEnableReachInCurrentAccel(dplayer, enemy.pos(), Parameter::CharaRadius());
-                if (isHit) {
-                    // 誰かにあたりそうなら加速しない
-                    doAccel = false;
-                    break;
+        // アクセルを踏む前に、敵がいたらよけれそうなルートを探索する
+        if (enemies != 0 && doAccel) {
+            Vec2 originalVel = dplayer.vel;
+            for (int angle = 0; angle <= 45; angle += 5) {
+                Vec2 vel0 = goal - dplayer.pos;
+                vel0.rotate(Math::DegToRad(angle));
+                vel0.normalize(Parameter::CharaAccelSpeed());
+                dplayer.vel = vel0;
+                bool isHitNoBody = true;
+                for (int i = 0; i < enemies->count(); ++i) {
+                    const Chara& enemy = enemies->operator[](i);
+                    bool isHit = isEnableReachInCurrentAccel(dplayer, enemy.pos(), Parameter::CharaRadius(), 1);
+                    if (isHit && (dplayer.pos - enemy.pos()).length() <= Parameter::CharaRadius() * 2.5) {
+                        isHitNoBody = false;
+                        break;
+                    }
                 }
+                if (isHitNoBody) {
+                    Vec2 newSub = goal - dplayer.pos;
+                    newSub.rotate(Math::DegToRad(angle));
+                    goal = dplayer.pos + newSub;
+                    break;
+                } else {
+                    isHitNoBody = true;
+                    Vec2 vel1 = goal - dplayer.pos;
+                    vel1.rotate(Math::DegToRad(-angle));
+                    vel1.normalize(Parameter::CharaAccelSpeed());
+                    dplayer.vel = vel1;
+                    for (int i = 0; i < enemies->count(); ++i) {
+                        const Chara& enemy = enemies->operator[](i);
+                        bool isHit = isEnableReachInCurrentAccel(dplayer, enemy.pos(), Parameter::CharaRadius(), 1);
+                        if (isHit && (dplayer.pos - enemy.pos()).length() <= Parameter::CharaRadius() * 2.5) {
+                            isHitNoBody = false;
+                            break;
+                        }
+                    }
+                    if (isHitNoBody) {
+                        Vec2 newSub = goal - dplayer.pos;
+                        newSub.rotate(Math::DegToRad(-angle));
+                        goal = dplayer.pos + newSub;
+                        break;
+                    }
+                }
+                // 左右45度全部ダメならアクセルを踏まない
+                doAccel = false;
             }
+            dplayer.vel = originalVel;
         }
         
         if (doAccel) {
