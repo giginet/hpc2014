@@ -91,7 +91,7 @@ namespace hpc {
         // acベクトルを90度回転する
         ac.rotate(Math::DegToRad(90));
         
-        ac.normalize(target.radius() * 0.75);
+        ac.normalize(target.radius());
         
         // 逆バージョンも作る
         Vec2 reversed = ac * -1;
@@ -113,7 +113,7 @@ namespace hpc {
     {
         // abベクトルを生成
         Vec2 ab = nextPoint - target.pos();
-        ab.normalize(target.radius() * 0.75);
+        ab.normalize(target.radius());
         
         Vec2 goal = target.pos() + ab;
         return goal;
